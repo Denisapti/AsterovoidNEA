@@ -1,13 +1,15 @@
 
 // initialising variables
 
+torpedos = []
+
+
 // player health
 var HPA = 1.0
 var HPB = 1.0
 
-// torpedo availibility (used in control loops)
-var torpReadyA = true
-var torpReadyB = true
+
+
 
 
 
@@ -22,27 +24,26 @@ function setup() {
 	border.collider = 'static'
 	
 	// setup players
-	playerA = new Sprite()
-	playerA.color = "blue"
-	playerA.x = width / 4
-	playerA.y = height / 4
-	playerA.h = 25
-	playerA.w = 80
-	playerA.offset.x = 15
-	playerA.textSize = 15;
-	playerA.text = "([]}--";
-	playerA.rotationSpeed = 0
+
+	players = new Group()
 	
-	playerB = new Sprite()
-	playerB.color = "red"
-	playerB.x = width - (width / 4)
-	playerB.y = height - (height / 4)
-	playerB.h = 25
-	playerB.w = 80
-	playerB.offset.x = 15
-	playerB.textSize = 15;
-	playerB.text = "([]}--";
-	playerB.rotationSpeed = 0
+	players.color = "blue"
+	players.h = 25
+	players.w = 80
+	players.offset.x = 15
+	players.textSize = 15;
+	players.text = "([]}--";
+	players.rotationSpeed = 0
+
+
+
+	player = new players.Sprite()
+	player.x = width / 4
+	player.y = height / 4
+	
+	
+	asteroids = new Group()
+	asteroids.diameter = 40
 	
 	//setup healthbars to show health (controlled in check health loop)
 	healthBarA = new Sprite()
@@ -63,23 +64,15 @@ function setup() {
 	healthBarB.y = 30
 	healthBarB.color = "red"
 	
-	
+
+
+
 	
 	//bounciness(uncomment if bored)
 	
-	// playerA.bounciness = 1;
-	// playerB.bounciness = 1;
-	
-	torpedoA = new Group()
+	//  playerA.bounciness = 1;
+	//  playerB.bounciness = 1;
 
-		
-	torpedoB = new Group()
-	
-	
-	
-
-	
-	
 }
 
 
@@ -134,122 +127,142 @@ function runTorp(){
 	//movement code for torpedos and tracking
 	//no targeting system yet so the opposing player is hardcoded as the target
 	
-	for (i=0; i < torpedoA.length; i++){
-		if(torpedoA[i].collides(playerB) == false){
-			torpedoA[i].rotateTowards(playerB, 0.1, 0)
-			torpedoA[i].moveTo(playerB.x, playerB.y, 2)
+	for (i=0; i < torpedos.length; i++){
+		if(torpedos[i].obj.collides(playerB) == false){
+			torpedos[i].obj.rotateTowards(playerB, 0.1, 0)
+			torpedos[i].obj.moveTo(playerB.x, playerB.y, 2)
 		}
 		else{
-			torpedoA[i].remove()
-			clearTimeout(torpALifespan);
-			torpReadyA = true
+			torpedos[i].obj.remove()
+			clearTimeout(torpedos[i].lifespan);
+			torpedos[i] = null
 			HPB -= 0.05
 		}
 	}
-	for (i=0; i < torpedoB.length; i++){
-		if(torpedoB[i].collides(playerA)== false){
-			torpedoB[i].rotateTowards(playerA, 0.1, 0);
-			torpedoB[i].moveTo(playerA.x, playerA.y, 2)
-		}
-		else{
-			torpedoB[i].remove()
-			clearTimeout(torpBLifespan);
-			torpReadyA = true
-			HPA -= 0.05
-		}
-	}
+
 }
 
-function ctrlA(){
-//use of contros[0] instead of contros, allows inputs from multiple controlers via increasing the contros[] array's index
-	if(contros[0])
+
+function launchTorp(playerID){
+		torp = {}
+
+
+		//ensure torpedo takes first avalible slot
+
+		found = false
+		for (i in torpedos)
+			{
+
+				if (torpedos[i] == null)
+					{
+						torpedos[i]=torp
+						found = true
+					}
+			}
+		if (found == false)
+			{
+				torpedos.push(torp)
+			}
+
+
+		torp.owner = playerID
+		torp.obj =  new Sprite(playerA.x, playerA.y, [
+		[25, 5],
+		[-25, 5],
+		[0, -10]
+	]) 
+		torp.status = false
+		torp.lifespan = setTimeout(function(){
+			
+			torp.obj.remove()
+			torp = null 
+		}  , 5000); // Time in milliseconds (5000 ms = 5 seconds)
+	}
+		
+
+
+
+function ctrl(playerID){
+//use of contros[playerID] instead of contros, allows inputs from multiple controlers via increasing the contros[] array's index
+	if(contros[playerID])
 	{
 
 
-		if ((contros[0].r) && (torpReadyA == true)){
-			torpA =  new torpedoA.Sprite(playerA.x, playerA.y, [
-			[25, 5],
-			[-25, 5],
-			[0, -10]
-		]) 
-			torpReadyA = false
-			torpALifespan = setTimeout(function() {
-			torpA.remove()
-			torpReadyA = true
-	}, 5000); // Time in milliseconds (5000 ms = 5 seconds)
+		if ((contros[playerID].r) ){
+			launchTorp(playerID)
 		}
-		if (contros[0].lt > 0.2){
-			playerA.rotationSpeed -= 0.01 *contros[0].lt
+		if (contros[playerID].lt > 0.2){
+			playerA.rotationSpeed -= 0.01 *contros[playerID].lt
 		}
-			if (contros[0].rt > 0.2){
-			playerA.rotationSpeed += 0.01 *contros[0].rt
+			if (contros[playerID].rt > 0.2){
+			playerA.rotationSpeed += 0.01 *contros[playerID].rt
 		}
-				if (contros[0].leftStick.y < -0.2){
+				if (contros[playerID].leftStick.y < -0.2){
 
 				playerA.bearing = playerA.rotation;
-				playerA.applyForce(-11*contros[0].leftStick.y);
+				playerA.applyForce(-11*contros[playerID].leftStick.y);
 		}
-					if (contros[0].leftStick.y > 0.2){
+					if (contros[playerID].leftStick.y > 0.2){
 
 				playerA.bearing = playerA.rotation + 180;
-				playerA.applyForce(2*contros[0].leftStick.y);
+				playerA.applyForce(2*contros[playerID].leftStick.y);
 		}
-					if (contros[0].leftStick.x > 0.2){
+					if (contros[playerID].leftStick.x > 0.2){
 
 				playerA.bearing = playerA.rotation + 90;
-				playerA.applyForce(2 * contros[0].leftStick.x);
+				playerA.applyForce(2 * contros[playerID].leftStick.x);
 		}
-					if (contros[0].leftStick.x < -0.2){
+					if (contros[playerID].leftStick.x < -0.2){
 
 				playerA.bearing = playerA.rotation + 270;
-				playerA.applyForce(-2 * contros[0].leftStick.x);
+				playerA.applyForce(-2 * contros[playerID].leftStick.x);
 		}
 	}
 }
 
-function ctrlB(){
-	if(contros[1]) 
-	{
+//function ctrlB(){          disabled
+// 	if(contros[1]) 
+// 	{
 		
 		       
 
 		
-		if ((contros[1].r) && (torpReadyB == true)){
-			torpB =  new torpedoB.Sprite(playerB.x, playerB.y, [
-				[25, 5],
-				[-25, 5],
-				[0, -10]
-			]) 
-			torpReadyB = false
-			torpBLifespan = setTimeout(function() {
-				torpB.remove()
-				torpReadyB = true
-			}, 5000); // Time in milliseconds (5000 ms = 5 seconds)
-		}
-		if (contros[1].lt > 0.2){
-			playerB.rotationSpeed -= 0.01 * contros[1].lt
-		}
-		if (contros[1].rt > 0.2){
-			playerB.rotationSpeed += 0.01 * contros[1].rt
-		}
-		if (contros[1].leftStick.y < -0.2){
-			playerB.bearing = playerB.rotation;
-			playerB.applyForce(-11 * contros[1].leftStick.y);
-		}
-		if (contros[1].leftStick.y > 0.2){
-			playerB.bearing = playerB.rotation + 180;
-			playerB.applyForce(2 * contros[1].leftStick.y);
-		}
-		if (contros[1].leftStick.x > 0.2){
-			playerB.bearing = playerB.rotation + 90;
-			playerB.applyForce(2 * contros[1].leftStick.x);
-		}
-		if (contros[1].leftStick.x < -0.2){
-			playerB.bearing = playerB.rotation + 270;
-			playerB.applyForce(-2 * contros[1].leftStick.x);
-		}
-	}
-}
+// 		if ((contros[1].r) && (torpReadyB == true)){
+// 			torpB =  new torpedoB.Sprite(playerB.x, playerB.y, [
+// 				[25, 5],
+// 				[-25, 5],
+// 				[0, -10]
+// 			]) 
+// 			torpReadyB = false
+// 			torpBLifespan = setTimeout(function() {
+// 				torpB.remove()
+// 				torpReadyB = true
+// 			}, 5000); // Time in milliseconds (5000 ms = 5 seconds)
+// 		}
+// 		if (contros[1].lt > 0.2){
+// 			playerB.rotationSpeed -= 0.01 * contros[1].lt
+// 		}
+// 		if (contros[1].rt > 0.2){
+// 			playerB.rotationSpeed += 0.01 * contros[1].rt
+// 		}
+// 		if (contros[1].leftStick.y < -0.2){
+// 			playerB.bearing = playerB.rotation;
+// 			playerB.applyForce(-11 * contros[1].leftStick.y);
+// 		}
+// 		if (contros[1].leftStick.y > 0.2){
+// 			playerB.bearing = playerB.rotation + 180;
+// 			playerB.applyForce(2 * contros[1].leftStick.y);
+// 		}
+// 		if (contros[1].leftStick.x > 0.2){
+// 			playerB.bearing = playerB.rotation + 90;
+// 			playerB.applyForce(2 * contros[1].leftStick.x);
+// 		}
+// 		if (contros[1].leftStick.x < -0.2){
+// 			playerB.bearing = playerB.rotation + 270;
+// 			playerB.applyForce(-2 * contros[1].leftStick.x);
+// 		}
+// 	}
+//}
 
 
 
@@ -299,8 +312,7 @@ function ctrlB(){
 // }
 
 function keyPressed(){
-	ctrlA()
-	ctrlB()
+	ctrl(0)
 	
 }
 
