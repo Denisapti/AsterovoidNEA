@@ -30,22 +30,12 @@ function setup() {
 	players.color = "blue"
 	players.h = 25
 	players.w = 80
-	players.offset.x = 15
 	players.textSize = 15;
 	players.text = "([]}--";
-	players.rotationSpeed = 0
-
-
-	let player = 
-	{
-		playerID: 0,
-		obj: null
-	}
-	player.obj = new players.Sprite()
-	player.obj.x = width / 4
-	player.obj.y = height / 4
-	players[player.playerID] = player
 	
+	addPlayerShip()
+
+
 	
 	asteroids = new Group()
 	asteroids.diameter = 40
@@ -55,7 +45,6 @@ function setup() {
 		asteroid = new asteroids.Sprite(((3/4)*width)+(i*10),(3/4)* height)
 	}
 
-	
 	//setup healthbars to show health (controlled in check health loop)
 	healthBarA = new Sprite()
 	healthBarA.collider = "n"
@@ -82,7 +71,7 @@ function setup() {
 	//bounciness(uncomment if bored)
 	
 	//  player.obj.bounciness = 1;
-	//  playerB.bounciness = 1;
+	
 
 }
 
@@ -106,7 +95,20 @@ function setup() {
 
 
 	
-
+function addPlayerShip()
+	{
+		player = 
+		{
+			playerID: 0,
+			obj: null
+		}
+		player.obj = new players.Sprite()
+		player.obj.x = width / 4
+		player.obj.y = height / 4
+		player.obj.offset.x = 15
+		
+		roster[player.playerID] = player
+	}
 
 
 
@@ -126,11 +128,7 @@ function checkHP(){
 		alert("Player RED wins")
 		throw new Error('Game Over')
 	}
-	if (HPB<=0){
-		playerB.remove()
-		alert("Player BLUE wins")
-		throw new Error('Game Over')
-	}
+
 }
 
 function runTorp(){
@@ -147,7 +145,7 @@ function runTorp(){
 			torpedos[i].obj.remove()
 			clearTimeout(torpedos[i].lifespan);
 			torpedos[i] = null
-			HPB -= 0.05
+			
 		}
 	}
 
@@ -157,6 +155,20 @@ function runTorp(){
 function launchTorp(playerID){
 		torp = {}
 
+		torp.owner = playerID
+		torp.obj =  new Sprite(roster[playerID].obj.x, roster[playerID].obj.y, [
+		[25, 5],
+		[-25, 5],
+		[0, -10]
+	]) 
+
+		torp.target = asteroids[1]
+		torp.status = false
+		torp.lifespan = setTimeout(function(){
+			
+			torp.obj.remove()
+			torp = null 
+		}  , 5000); // Time in milliseconds (5000 ms = 5 seconds)
 
 		//ensure torpedo takes first avalible slot
 
@@ -176,20 +188,7 @@ function launchTorp(playerID){
 			}
 
 
-		torp.owner = playerID
-		torp.obj =  new Sprite(roster[playerID].obj.x, proster[playerID].obj.y, [
-		[25, 5],
-		[-25, 5],
-		[0, -10]
-	]) 
 
-		torp.target = asteroids[1]
-		torp.status = false
-		torp.lifespan = setTimeout(function(){
-			
-			torp.obj.remove()
-			torp = null 
-		}  , 5000); // Time in milliseconds (5000 ms = 5 seconds)
 	}
 		
 
@@ -200,10 +199,45 @@ function ctrl(playerID){
 	if(contros[playerID])
 	{
 
+		if (contros[playerID].pressing('r') == true)
+			{console.log("pressed RB");
+			
+				if (roster[playerID].prevFramePressedRB == false)
+					{console.log("new ray");
+						// create ray
+						roster[playerID].targRay = new Sprite(roster[playerID].obj.x, roster[playerID].obj.y, 1, 100, "n")
+					}
+				else
+				{console.log("maintain ray");
+					// check ray existence
+					if (roster[playerID].targRay != null)
+						{console.log("ray exists")
+							//update ray X,Y cords
+							roster[playerID].targRay.x = roster[playerID].obj.x
+							roster[playerID].targRay.y = roster[playerID].obj.y
+							// take input from right stick and point ray there
+							// then check for overlaps with valid targets
 
-		if ((contros[playerID].r) ){
-			launchTorp(playerID)
-		}
+						}
+				}
+				
+			}
+		else  
+			{console.log("fire?")
+				if (roster[playerID].prevFramePressedRB == true)
+					{console.log("fire!")
+						// launchTorp(playerID)
+					}
+				
+			}
+
+
+
+
+
+
+
+
 		if (contros[playerID].lt > 0.2){
 			roster[playerID].obj.rotationSpeed -= 0.01 *contros[playerID].lt
 		}
@@ -212,12 +246,12 @@ function ctrl(playerID){
 		}
 		if (contros[playerID].leftStick.y < -0.2){
 
-			roster[playerID].bearing = playeroster[playerID].rotation;
+			roster[playerID].obj.bearing = roster[playerID].obj.rotation;
 			roster[playerID].obj.applyForce(-11*contros[playerID].leftStick.y);
 		}
 		if (contros[playerID].leftStick.y > 0.2){
 
-			roster[playerID].obj.bearing = proster[playerID].obj.rotation + 180;
+			roster[playerID].obj.bearing = roster[playerID].obj.rotation + 180;
 			roster[playerID].obj.applyForce(2*contros[playerID].leftStick.y);
 		}
 		if (contros[playerID].leftStick.x > 0.2){
@@ -230,6 +264,20 @@ function ctrl(playerID){
 			roster[playerID].obj.bearing = roster[playerID].obj.rotation + 270;
 			roster[playerID].obj.applyForce(-2 * contros[playerID].leftStick.x);
 		}
+
+
+
+
+		//track state for next frame
+		if ((contros[playerID].r) )
+			{
+				roster[playerID].prevFramePressedRB = true
+				
+			}
+		else
+			{
+				roster[playerID].prevFramePressedRB = false
+			}
 	}
 }
 
