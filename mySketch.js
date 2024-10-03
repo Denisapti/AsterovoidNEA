@@ -2,7 +2,7 @@
 // initialising variables
 
 torpedos = []
-
+roster = []
 
 // player health
 var HPA = 1.0
@@ -26,7 +26,7 @@ function setup() {
 	// setup players
 
 	players = new Group()
-	
+	players.collider = "d"
 	players.color = "blue"
 	players.h = 25
 	players.w = 80
@@ -36,14 +36,25 @@ function setup() {
 	players.rotationSpeed = 0
 
 
-
-	player = new players.Sprite()
-	player.x = width / 4
-	player.y = height / 4
+	let player = 
+	{
+		playerID: 0,
+		obj: null
+	}
+	player.obj = new players.Sprite()
+	player.obj.x = width / 4
+	player.obj.y = height / 4
+	players[player.playerID] = player
 	
 	
 	asteroids = new Group()
 	asteroids.diameter = 40
+	asteroids.collider = "d"
+	for (i=0;i< 5;i++)
+	{
+		asteroid = new asteroids.Sprite(((3/4)*width)+(i*10),(3/4)* height)
+	}
+
 	
 	//setup healthbars to show health (controlled in check health loop)
 	healthBarA = new Sprite()
@@ -70,7 +81,7 @@ function setup() {
 	
 	//bounciness(uncomment if bored)
 	
-	//  playerA.bounciness = 1;
+	//  player.obj.bounciness = 1;
 	//  playerB.bounciness = 1;
 
 }
@@ -80,9 +91,9 @@ function setup() {
 
 // function fadeUI(){
 // 	opacity = 100
-// 	playerA.overlaps(healthBarA && healthBarB)
+// 	player.obj.overlaps(healthBarA && healthBarB)
 	
-// 	if ((playerA.overlaps(healthBarA || healthBarB))&&(opacity > 5)){
+// 	if ((player.obj.overlaps(healthBarA || healthBarB))&&(opacity > 5)){
 // 		opacity-=10
 // 		console.log("over")
 // 	}
@@ -111,7 +122,7 @@ function checkHP(){
 	healthBarB.x = width - (healthBarB.w/2)+10	
 	// check death (ends game)
 	if (HPA<=0){
-		playerA.remove()
+		player.obj.remove()
 		alert("Player RED wins")
 		throw new Error('Game Over')
 	}
@@ -128,9 +139,9 @@ function runTorp(){
 	//no targeting system yet so the opposing player is hardcoded as the target
 	
 	for (i=0; i < torpedos.length; i++){
-		if(torpedos[i].obj.collides(playerB) == false){
-			torpedos[i].obj.rotateTowards(playerB, 0.1, 0)
-			torpedos[i].obj.moveTo(playerB.x, playerB.y, 2)
+		if(torpedos[i].obj.collides(torpedos[i].target) == false){
+			torpedos[i].obj.rotateTowards(torpedos[i].target, 0.1, 0)
+			torpedos[i].obj.moveTo(torpedos[i].target.x, torpedos[i].target.y, 2)
 		}
 		else{
 			torpedos[i].obj.remove()
@@ -166,11 +177,13 @@ function launchTorp(playerID){
 
 
 		torp.owner = playerID
-		torp.obj =  new Sprite(playerA.x, playerA.y, [
+		torp.obj =  new Sprite(roster[playerID].obj.x, proster[playerID].obj.y, [
 		[25, 5],
 		[-25, 5],
 		[0, -10]
 	]) 
+
+		torp.target = asteroids[1]
 		torp.status = false
 		torp.lifespan = setTimeout(function(){
 			
@@ -192,30 +205,30 @@ function ctrl(playerID){
 			launchTorp(playerID)
 		}
 		if (contros[playerID].lt > 0.2){
-			playerA.rotationSpeed -= 0.01 *contros[playerID].lt
+			roster[playerID].obj.rotationSpeed -= 0.01 *contros[playerID].lt
 		}
-			if (contros[playerID].rt > 0.2){
-			playerA.rotationSpeed += 0.01 *contros[playerID].rt
+		if (contros[playerID].rt > 0.2){
+			roster[playerID].obj.rotationSpeed += 0.01 *contros[playerID].rt
 		}
-				if (contros[playerID].leftStick.y < -0.2){
+		if (contros[playerID].leftStick.y < -0.2){
 
-				playerA.bearing = playerA.rotation;
-				playerA.applyForce(-11*contros[playerID].leftStick.y);
+			roster[playerID].bearing = playeroster[playerID].rotation;
+			roster[playerID].obj.applyForce(-11*contros[playerID].leftStick.y);
 		}
-					if (contros[playerID].leftStick.y > 0.2){
+		if (contros[playerID].leftStick.y > 0.2){
 
-				playerA.bearing = playerA.rotation + 180;
-				playerA.applyForce(2*contros[playerID].leftStick.y);
+			roster[playerID].obj.bearing = proster[playerID].obj.rotation + 180;
+			roster[playerID].obj.applyForce(2*contros[playerID].leftStick.y);
 		}
-					if (contros[playerID].leftStick.x > 0.2){
+		if (contros[playerID].leftStick.x > 0.2){
 
-				playerA.bearing = playerA.rotation + 90;
-				playerA.applyForce(2 * contros[playerID].leftStick.x);
+			roster[playerID].obj.bearing = roster[playerID].obj.rotation + 90;
+			roster[playerID].obj.applyForce(2 * contros[playerID].leftStick.x);
 		}
-					if (contros[playerID].leftStick.x < -0.2){
+		if (contros[playerID].leftStick.x < -0.2){
 
-				playerA.bearing = playerA.rotation + 270;
-				playerA.applyForce(-2 * contros[playerID].leftStick.x);
+			roster[playerID].obj.bearing = roster[playerID].obj.rotation + 270;
+			roster[playerID].obj.applyForce(-2 * contros[playerID].leftStick.x);
 		}
 	}
 }
