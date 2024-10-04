@@ -199,10 +199,10 @@ function ctrl(playerID){
 	if(contros[playerID])
 	{
 
-		if (contros[playerID].pressing('r') == true)
+		if (contros[playerID].r > 0)
 			{console.log("pressed RB");
 			
-				if (roster[playerID].prevFramePressedRB == false)
+				if (contros[playerID].r < 2)
 					{console.log("new ray");
 						// create ray
 						roster[playerID].targRay = new Sprite(roster[playerID].obj.x, roster[playerID].obj.y, 1, 100, "n")
@@ -269,16 +269,16 @@ function ctrl(playerID){
 
 
 		//track state for next frame
-		if ((contros[playerID].r) )
-			{
-				roster[playerID].prevFramePressedRB = true
+	// 	if ((contros[playerID].r) )
+	// 		{
+	// 			roster[playerID].prevFramePressedRB = true
 				
-			}
-		else
-			{
-				roster[playerID].prevFramePressedRB = false
-			}
-	}
+	// 		}
+	// 	else
+	// 		{
+	// 			roster[playerID].prevFramePressedRB = false
+	// 		}
+  }
 }
 
 //function ctrlB(){          disabled
