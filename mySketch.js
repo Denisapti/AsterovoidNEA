@@ -25,6 +25,9 @@ function setup() {
 	
 	// setup players
 
+	interactables = new Group()
+
+
 	players = new Group()
 	players.collider = "d"
 	players.color = "blue"
@@ -111,7 +114,20 @@ function addPlayerShip()
 	}
 
 
+function updateInteractables(){
+	interactables.removeSprites()
+	for (let i in roster){
+		interactables.add(roster[i].obj)
+	}
+	
+	for (let i in asteroids){
+		interactables.add(asteroids[i])
+	}
 
+	for (let i in torpedos){
+		interactables.add(torpedos[i].obj)
+	}
+}
 
 function checkHP(){
 	
@@ -152,45 +168,60 @@ function runTorp(){
 }
 
 
-function launchTorp(playerID){
-		torp = {}
+function launchTorp(playerID, target){
+	console.log("torplaunchtriggered")
+		if ( target != null){
+			console.log("target valid")
+			torp = {}
 
-		torp.owner = playerID
-		torp.obj =  new Sprite(roster[playerID].obj.x, roster[playerID].obj.y, [
-		[25, 5],
-		[-25, 5],
-		[0, -10]
-	]) 
-
-		torp.target = asteroids[1]
-		torp.status = false
-		torp.lifespan = setTimeout(function(){
-			
-			torp.obj.remove()
-			torp = null 
-		}  , 5000); // Time in milliseconds (5000 ms = 5 seconds)
-
-		//ensure torpedo takes first avalible slot
-
-		found = false
-		for (i in torpedos)
-			{
-
-				if (torpedos[i] == null)
-					{
-						torpedos[i]=torp
-						found = true
-					}
-			}
-		if (found == false)
-			{
-				torpedos.push(torp)
-			}
-
-
-
+			torp.owner = playerID
+			torp.obj =  new Sprite(roster[playerID].obj.x, roster[playerID].obj.y, [
+			[25, 5],
+			[-25, 5],
+			[0, -10]
+		]) 
+	
+			torp.target = target
+			torp.status = false
+			torp.lifespan = setTimeout(function(){
+				
+				torp.obj.remove()
+				torp = null 
+			}  , 5000); // Time in milliseconds (5000 ms = 5 seconds)
+	
+			//ensure torpedo takes first avalible slot
+	
+			found = false
+			for (i in torpedos)
+				{
+	
+					if (torpedos[i] == null)
+						{
+							torpedos[i]=torp
+							found = true
+						}
+				}
+			if (found == false)
+				{
+					torpedos.push(torp)
+				}
+	
+	
+	
+		}
 	}
 		
+function findBearing(x,y){
+	let theta = Math.atan2(y, x); // atan2 handles the quadrant adjustments
+    let bearing = theta * (180 / Math.PI); // Convert radians to degrees
+	if (bearing < 0) 
+		{
+			bearing += 360
+		}
+	return bearing
+}
+
+
 
 
 
@@ -200,15 +231,17 @@ function ctrl(playerID){
 	{
 
 		if (contros[playerID].r > 0)
-			{console.log("pressed RB");
+			{
 			
 				if (contros[playerID].r < 2)
-					{console.log("new ray");
+					{
 						// create ray
-						roster[playerID].targRay = new Sprite(roster[playerID].obj.x, roster[playerID].obj.y, 1, 100, "n")
+						roster[playerID].targRay = new Sprite(roster[playerID].obj.x, roster[playerID].obj.y, 1000, 1, "n")
+						roster[playerID].targRay.offset.x = 600
+
 					}
 				else
-				{console.log("maintain ray");
+				{
 					// check ray existence
 					if (roster[playerID].targRay != null)
 						{console.log("ray exists")
@@ -216,17 +249,36 @@ function ctrl(playerID){
 							roster[playerID].targRay.x = roster[playerID].obj.x
 							roster[playerID].targRay.y = roster[playerID].obj.y
 							// take input from right stick and point ray there
+
+							if (((contros[playerID].rightStick.y < -0.2) || (contros[playerID].rightStick.y > 0.2))||((contros[playerID].rightStick.x < -0.2) || (contros[playerID].rightStick.x > 0.2)))
+								{
+									contros[playerID].rightStick.bearing = findBearing(contros[playerID].rightStick.x,contros[playerID].rightStick.y)
+									roster[playerID].targRay.rotation = contros[playerID].rightStick.bearing
+								}
+
+
 							// then check for overlaps with valid targets
+							for (let i of interactables)
+								{console.log("checkin overlap")
+									if (roster[playerID].targRay.overlaps(i))
+									{console.log("Overlap found")
+										roster[playerID].target = i
+									}
+								}	
+
+
 
 						}
 				}
 				
 			}
 		else  
-			{console.log("fire?")
+			{
 				if (roster[playerID].prevFramePressedRB == true)
 					{console.log("fire!")
-						// launchTorp(playerID)
+						roster[playerID].targRay.remove()
+						launchTorp(playerID,roster[playerID].target)
+						roster[playerID].target = null
 					}
 				
 			}
@@ -269,15 +321,15 @@ function ctrl(playerID){
 
 
 		//track state for next frame
-	// 	if ((contros[playerID].r) )
-	// 		{
-	// 			roster[playerID].prevFramePressedRB = true
+		if ((contros[playerID].r>=1) )
+			{
+				roster[playerID].prevFramePressedRB = true
 				
-	// 		}
-	// 	else
-	// 		{
-	// 			roster[playerID].prevFramePressedRB = false
-	// 		}
+			}
+		else
+			{
+				roster[playerID].prevFramePressedRB = false
+			}
   }
 }
 
@@ -381,6 +433,7 @@ function keyPressed(){
 function draw() {
 	clear()
 	background(0)
+	updateInteractables()
 	keyPressed()
 	runTorp()
 	checkHP()
