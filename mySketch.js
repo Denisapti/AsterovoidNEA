@@ -1,8 +1,8 @@
 
 // initialising variables
 
-torpedos = []
 roster = []
+torpedos = []
 
 // player health
 var HPA = 1.0
@@ -28,7 +28,7 @@ function setup() {
 	interactables = new Group()
 
 
-	players = new Group()
+	players = new interactables.Group()
 	players.collider = "d"
 	players.color = "blue"
 	players.h = 25
@@ -38,9 +38,10 @@ function setup() {
 	
 	addPlayerShip()
 
-
+	torpedosObjs = new interactables.Group()
 	
-	asteroids = new Group()
+	
+	asteroids = new interactables.Group()
 	asteroids.diameter = 40
 	asteroids.collider = "d"
 	for (i=0;i< 5;i++)
@@ -109,25 +110,26 @@ function addPlayerShip()
 		player.obj.x = width / 4
 		player.obj.y = height / 4
 		player.obj.offset.x = 15
-		
+		player.abilities = ["torpedo", "guns"]
+		player.abilityState = 0
 		roster[player.playerID] = player
 	}
 
 
-function updateInteractables(){
-	interactables.removeSprites()
-	for (let i in roster){
-		interactables.add(roster[i].obj)
-	}
+// function updateInteractables(){
+// 	interactables.removeAll()
+// 	for (let i in roster){
+// 		interactables.add(roster[i].obj)
+// 	}
 	
-	for (let i in asteroids){
-		interactables.add(asteroids[i])
-	}
+// 	for (let i in asteroids){
+// 		interactables.add(asteroids[i])
+// 	}
 
-	for (let i in torpedos){
-		interactables.add(torpedos[i].obj)
-	}
-}
+// 	for (let i in torpedos){
+// 		interactables.add(torpedos[i].obj)
+// 	}
+// }
 
 function checkHP(){
 	
@@ -153,14 +155,16 @@ function runTorp(){
 	//no targeting system yet so the opposing player is hardcoded as the target
 	
 	for (i=0; i < torpedos.length; i++){
+		console.log(torpedos[i])
 		if(torpedos[i].obj.collides(torpedos[i].target) == false){
 			torpedos[i].obj.rotateTowards(torpedos[i].target, 0.1, 0)
 			torpedos[i].obj.moveTo(torpedos[i].target.x, torpedos[i].target.y, 2)
 		}
 		else{
+			console.log()
 			torpedos[i].obj.remove()
 			clearTimeout(torpedos[i].lifespan);
-			torpedos[i] = null
+			torpedos.splice(i)
 			
 		}
 	}
@@ -172,7 +176,7 @@ function launchTorp(playerID, target){
 	console.log("torplaunchtriggered")
 		if ( target != null){
 			console.log("target valid")
-			torp = {}
+			let torp = {}
 
 			torp.owner = playerID
 			torp.obj =  new Sprite(roster[playerID].obj.x, roster[playerID].obj.y, [
@@ -204,12 +208,14 @@ function launchTorp(playerID, target){
 			if (found == false)
 				{
 					torpedos.push(torp)
+					torpedosObjs.add(torp.obj)
 				}
 	
 	
 	
 		}
 	}
+
 		
 function findBearing(x,y){
 	let theta = Math.atan2(y, x); // atan2 handles the quadrant adjustments
@@ -221,6 +227,38 @@ function findBearing(x,y){
 	return bearing
 }
 
+function calculateBearingLineEnd(bearing, length) {
+	let x
+	let y
+	switch (true)
+	{
+		case bearing>270:
+			theta = bearing -270
+			x = (sin(theta)*length)
+			y = -(cos(theta)*length)
+			break;
+		
+		case bearing>180:
+			theta = bearing -180
+			x = -(cos(theta)*length)
+			y = -(sin(theta)*length)
+			break;
+		
+		case bearing>90:
+			theta = bearing -90
+			x = -(sin(theta)*length)
+			y = cos(theta)*length
+			break;
+
+		case bearing >= 0:
+			theta = bearing
+			x = (cos(theta)*length)
+			y = (sin(theta)*length)
+
+	}
+
+	return createVector(x, y);
+  }
 
 
 
@@ -229,60 +267,107 @@ function ctrl(playerID){
 //use of contros[playerID] instead of contros, allows inputs from multiple controlers via increasing the contros[] array's index
 	if(contros[playerID])
 	{
+		roster[playerID].playerLocation = createVector(roster[playerID].obj.x, roster[playerID].obj.y)
 
-		if (contros[playerID].r > 0)
+	
+
+		//hotbar switcher
+		if (contros[playerID].presses('left')){
+			if (roster[playerID].abilityState = 0)
 			{
-			
-				if (contros[playerID].r < 2)
-					{
-						// create ray
-						roster[playerID].targRay = new Sprite(roster[playerID].obj.x, roster[playerID].obj.y, 1000, 1, "n")
-						roster[playerID].targRay.offset.x = 600
+				
+				roster[playerID].abilityState = roster[playerID].abilities.length - 1
+			}
+			else
+			{
+				roster[playerID].abilityState -= 1
+			}
+			console.log(roster[playerID].abilityState)
+		}
 
-					}
-				else
+		if (contros[playerID].presses('right')){
+			if (roster[playerID].abilityState = roster[playerID].abilities.length - 1)
+			{
+				
+				roster[playerID].abilityState = 0
+			}
+			else
+			{
+				roster[playerID].abilityState += 1
+			}
+			console.log(roster[playerID].abilityState)
+		}
+
+
+		if (roster[playerID].abilities[roster[playerID].abilityState] == "torpedo")
+		{
+			if (contros[playerID].r > 0)
 				{
-					// check ray existence
-					if (roster[playerID].targRay != null)
-						{console.log("ray exists")
-							//update ray X,Y cords
-							roster[playerID].targRay.x = roster[playerID].obj.x
-							roster[playerID].targRay.y = roster[playerID].obj.y
-							// take input from right stick and point ray there
-
-							if (((contros[playerID].rightStick.y < -0.2) || (contros[playerID].rightStick.y > 0.2))||((contros[playerID].rightStick.x < -0.2) || (contros[playerID].rightStick.x > 0.2)))
-								{
-									contros[playerID].rightStick.bearing = findBearing(contros[playerID].rightStick.x,contros[playerID].rightStick.y)
-									roster[playerID].targRay.rotation = contros[playerID].rightStick.bearing
-								}
-
-
-							// then check for overlaps with valid targets
-							for (let i of interactables)
-								{console.log("checkin overlap")
-									if (roster[playerID].targRay.overlaps(i))
-									{console.log("Overlap found")
-										roster[playerID].target = i
-									}
-								}	
-
+				
+					if (contros[playerID].r < 2)
+						{
+							// create ray
+							rayDistance = 600
+							roster[playerID].targRay = new Sprite(roster[playerID].obj.x + rayDistance, roster[playerID].obj.y, 1000, 1, "n")
+							
+							
 
 
 						}
-				}
-				
-			}
-		else  
-			{
-				if (roster[playerID].prevFramePressedRB == true)
-					{console.log("fire!")
-						roster[playerID].targRay.remove()
-						launchTorp(playerID,roster[playerID].target)
-						roster[playerID].target = null
-					}
-				
-			}
+					else
+					{
+						// check ray existence
+						if (roster[playerID].targRay != null)
+							{console.log("ray exists")
+								
+								// take input from right stick and point ray there
 
+								if (((contros[playerID].rightStick.y < -0.2) || (contros[playerID].rightStick.y > 0.2))||((contros[playerID].rightStick.x < -0.2) || (contros[playerID].rightStick.x > 0.2)))
+									{
+										contros[playerID].rightStick.bearing = findBearing(contros[playerID].rightStick.x,contros[playerID].rightStick.y)
+										roster[playerID].targRay.rotation = contros[playerID].rightStick.bearing
+									}
+
+								//update ray X,Y cords
+								
+								roster[playerID].targRay.LocationVector = calculateBearingLineEnd( contros[playerID].rightStick.bearing , rayDistance)
+
+								roster[playerID].targRay.x = roster[playerID].obj.x + roster[playerID].targRay.LocationVector.x
+								roster[playerID].targRay.y = roster[playerID].obj.y + roster[playerID].targRay.LocationVector.y
+
+								
+
+								// then check for overlaps with valid targets
+								for (let i of interactables)
+									{console.log("checkin overlap")
+										if (roster[playerID].targRay.overlaps(i))
+										{
+											if (i != roster[playerID].obj) 
+												{
+													console.log("Overlap found")
+													roster[playerID].target = i
+												}
+										}
+										
+									}	
+
+
+
+							}
+					}
+					
+				}
+			else  
+				{
+					if (roster[playerID].prevFramePressedRB == true)
+						{console.log("fire!")
+							roster[playerID].targRay.remove()
+							launchTorp(playerID,roster[playerID].target)
+							roster[playerID].target = null
+						}
+					
+				}
+		}
 
 
 
@@ -433,7 +518,7 @@ function keyPressed(){
 function draw() {
 	clear()
 	background(0)
-	updateInteractables()
+
 	keyPressed()
 	runTorp()
 	checkHP()
