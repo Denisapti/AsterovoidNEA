@@ -3,6 +3,7 @@
 
 roster = []
 torpedos = []
+bullets = []
 
 // player health
 var HPA = 1.0
@@ -39,7 +40,7 @@ function setup() {
 	addPlayerShip()
 
 	torpedosObjs = new interactables.Group()
-	
+	bulletObjs = new interactables.Group()
 	
 	asteroids = new interactables.Group()
 	asteroids.diameter = 40
@@ -110,7 +111,7 @@ function addPlayerShip()
 		player.obj.x = width / 4
 		player.obj.y = height / 4
 		player.obj.offset.x = 15
-		player.abilities = ["torpedo", "guns"]
+		player.abilities = ["torpedo", "gun"]
 		player.abilityState = 0
 		roster[player.playerID] = player
 	}
@@ -216,6 +217,59 @@ function launchTorp(playerID, target){
 		}
 	}
 
+
+
+
+	function fireGun(playerID, bearing, power){
+		console.log("gunFireTriggered")
+			
+		let bulletOriginVector = calculateBearingLineEnd( bearing , 100)
+				
+			let bullet = {}
+
+			bullet.owner = playerID
+			bullet.obj =  new Sprite(roster[playerID].obj.x + bulletOriginVector.x, roster[playerID].obj.y + bulletOriginVector.y, [
+			[25, 5],
+			[-25, 5],
+			[0, -10]
+			]) 
+			
+			bullet.obj.bearing = bearing
+			bullet.obj.applyForce(2*power)
+			
+
+			bullet.status = false
+			bullet.lifespan = setTimeout(function(){
+					
+			bullet.obj.remove()
+			bullet = null 
+			}  , 5000); // Time in milliseconds (5000 ms = 5 seconds)
+	
+			//ensure bullet takes first avalible slot
+	
+			found = false
+			for (i in bullets)
+				{
+	
+					if (bullets[i] == null)
+						{
+							bullets[i]=bullet
+							found = true
+						}
+				}
+			if (found == false)
+				{
+					bullets.push(bullet)
+					bulletObjs.add(bullet.obj)
+				}
+	
+			
+		
+			
+		}
+
+
+
 		
 function findBearing(x,y){
 	let theta = Math.atan2(y, x); // atan2 handles the quadrant adjustments
@@ -269,11 +323,11 @@ function ctrl(playerID){
 	{
 		roster[playerID].playerLocation = createVector(roster[playerID].obj.x, roster[playerID].obj.y)
 
-	
+		contros[playerID].rightStick.bearing = findBearing(contros[playerID].rightStick.x,contros[playerID].rightStick.y)
 
 		//hotbar switcher
 		if (contros[playerID].presses('left')){
-			if (roster[playerID].abilityState = 0)
+			if (roster[playerID].abilityState == 0)
 			{
 				
 				roster[playerID].abilityState = roster[playerID].abilities.length - 1
@@ -286,7 +340,7 @@ function ctrl(playerID){
 		}
 
 		if (contros[playerID].presses('right')){
-			if (roster[playerID].abilityState = roster[playerID].abilities.length - 1)
+			if (roster[playerID].abilityState == roster[playerID].abilities.length - 1)
 			{
 				
 				roster[playerID].abilityState = 0
@@ -298,7 +352,7 @@ function ctrl(playerID){
 			console.log(roster[playerID].abilityState)
 		}
 
-
+		// torpedo control code 
 		if (roster[playerID].abilities[roster[playerID].abilityState] == "torpedo")
 		{
 			if (contros[playerID].r > 0)
@@ -324,7 +378,7 @@ function ctrl(playerID){
 
 								if (((contros[playerID].rightStick.y < -0.2) || (contros[playerID].rightStick.y > 0.2))||((contros[playerID].rightStick.x < -0.2) || (contros[playerID].rightStick.x > 0.2)))
 									{
-										contros[playerID].rightStick.bearing = findBearing(contros[playerID].rightStick.x,contros[playerID].rightStick.y)
+										
 										roster[playerID].targRay.rotation = contros[playerID].rightStick.bearing
 									}
 
@@ -371,7 +425,65 @@ function ctrl(playerID){
 
 
 
+		// gun control code 
+		if (roster[playerID].abilities[roster[playerID].abilityState] == "gun")
+			{ console.log("gun")
+				if (contros[playerID].r > 0)
+					{
+					
+						if (contros[playerID].r < 2)
+							{
+								// create ray
+								rayDistance = 100
+								rayLength = 200
+								roster[playerID].targRay = new Sprite(roster[playerID].obj.x + rayDistance, roster[playerID].obj.y, rayLength, 1, "n")
+								
+								
+	
+	
+							}
+						else
+						{
+							// check ray existence
+							if (roster[playerID].targRay != null)
+								{console.log("ray exists")
+									
+									// take input from right stick and point ray there
+	
+									if (((contros[playerID].rightStick.y < -0.2) || (contros[playerID].rightStick.y > 0.2))||((contros[playerID].rightStick.x < -0.2) || (contros[playerID].rightStick.x > 0.2)))
+										{
+											
+											roster[playerID].targRay.rotation = contros[playerID].rightStick.bearing
+										}
+	
+									//update ray X,Y cords
+									
+									roster[playerID].targRay.LocationVector = calculateBearingLineEnd( contros[playerID].rightStick.bearing , rayDistance)
+	
+									roster[playerID].targRay.x = roster[playerID].obj.x + roster[playerID].targRay.LocationVector.x
+									roster[playerID].targRay.y = roster[playerID].obj.y + roster[playerID].targRay.LocationVector.y
+									rayDistance += 1
+									rayLength += 1
+									roster[playerID].targRay.width = rayLength
 
+								}
+						}
+						
+					}
+				else  
+					{
+						if (roster[playerID].prevFramePressedRB == true)
+							{console.log("fire!")
+								
+								// fire gun
+
+								fireGun(playerID, contros[playerID].rightStick.bearing, rayDistance)
+
+								roster[playerID].targRay.remove()
+							}
+						
+					}
+			}
 
 
 
