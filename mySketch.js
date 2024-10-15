@@ -159,7 +159,7 @@ function runTorp(){
 		console.log(torpedos[i])
 		if(torpedos[i].obj.collides(torpedos[i].target) == false){
 			torpedos[i].obj.rotateTowards(torpedos[i].target, 0.1, 0)
-			torpedos[i].obj.moveTo(torpedos[i].target.x, torpedos[i].target.y, 2)
+			torpedos[i].obj.moveTo(torpedos[i].target.x, torpedos[i].target.y, 6)
 		}
 		else{
 			console.log()
@@ -175,15 +175,27 @@ function runTorp(){
 
 function launchTorp(playerID, target){
 	console.log("torplaunchtriggered")
-		if ( target != null){
+	let torpedoAvalibility = true
+	for (i=0; i < torpedos.length; i++){
+		if (torpedos[i].owner == playerID){
+			torpedoAvalibility = false
+		}
+
+	}
+
+
+		
+
+
+		if (( target != null) && (torpedoAvalibility)){
 			console.log("target valid")
 			let torp = {}
 
 			torp.owner = playerID
 			torp.obj =  new Sprite(roster[playerID].obj.x, roster[playerID].obj.y, [
-			[25, 5],
-			[-25, 5],
-			[0, -10]
+			[35, 3],
+			[-35, 3],
+			[0, -6]
 		]) 
 	
 			torp.target = target
@@ -229,13 +241,13 @@ function launchTorp(playerID, target){
 
 			bullet.owner = playerID
 			bullet.obj =  new Sprite(roster[playerID].obj.x + bulletOriginVector.x, roster[playerID].obj.y + bulletOriginVector.y, [
-			[25, 5],
-			[-25, 5],
+			[15, 5],
+			[-15, 5],
 			[0, -10]
 			]) 
 			
 			bullet.obj.bearing = bearing
-			bullet.obj.applyForce(2*power)
+			bullet.obj.applyForce(0.5*power)
 			
 
 			bullet.status = false
