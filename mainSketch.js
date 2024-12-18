@@ -1,4 +1,4 @@
-
+ 
 // initialising variables
 
 roster = []
@@ -15,15 +15,41 @@ var HPB = 1.0
 
 
 function setup() {
-	createCanvas(windowWidth, windowHeight);
+	createCanvas(600,600);
+
 	background(0);
+	console.log("main start")	
+	// border to prevent loss of ships in testing <disabled>
+	// border = new Sprite(width/2, height/2, width, height);
+	// border.shape = 'chain'
+	// border.collider = 'static'
+
+	//rescale camera and canvas accordingly <abandoned solution>
+	// find canvas resoloution / 1920X1080 (typical size)
+
+	// rescale = canvas.w/1920
 	
+	// camera.zoom = rescale  </abandoned solution>
+
+
+
+	//calculate player horizon
+	//    _______
+	//   √a^2+b^2 = c  
+	//
+	//to find hypotenuse of a quarter of the
+	// circumcircle's rectangle (viewport)
 	
-	// border to prevent loss of ships in testing
-	border = new Sprite(width/2, height/2, width, height);
-	border.shape = 'chain'
-	border.collider = 'static'
+	playerHorizon = findRadius(canvas.hw,canvas.hh)
+	 
+	// select a world radius that is 2x the diameter of 
+	// the players vision, which is 2x the player's horizon radius
+	worldRadius = playerHorizon*2*2
+	bufferRadius = worldRadius + playerHorizon
 	
+
+
+
 	// setup players
 
 	interactables = new Group()
@@ -116,8 +142,27 @@ function addPlayerShip()
 		roster[player.playerID] = player
 	}
 
+function followCamera(target)
+{
 
-// function updateInteractables(){
+	camera.x = target.x + (target.vel.x*-3) // follows with a delay based on
+	camera.y = target.y + (target.vel.y*-3) // the target's velocity
+
+}
+ 
+
+
+function miniMap(player)
+{
+	ellipse(10,10,10,10)
+}
+
+
+
+
+
+
+// function updateInteractables(){<abandoned solution>
 // 	interactables.removeAll()
 // 	for (let i in roster){
 // 		interactables.add(roster[i].obj)
@@ -130,9 +175,74 @@ function addPlayerShip()
 // 	for (let i in torpedos){
 // 		interactables.add(torpedos[i].obj)
 // 	}
-// }
+// }</abandoned solution>
 
-function checkHP(){
+function enforceBorders()
+{
+	for ( i of interactables)//check every game object
+	{
+		objectRadius = findRadius(i.x,i.y)//determine distance from map core
+		if (objectRadius > worldRadius)//assess zoneing
+		{
+			if (objectRadius < bufferRadius)
+			{
+				//mirror the object
+				mirrorObject(i)
+			}
+			else
+			{
+				//teleport the object
+				crossBorder(i)
+				i.slave = null // remove mirrored slave
+			}
+		}
+		else
+		{
+			i.slave = null	// remove mirrored slave
+		}
+	}
+}
+
+
+function crossBorder(obj)
+{
+	obj.x *= -1	//teleports an object to the opposite end of the map
+	obj.y *= -1
+}
+
+function mirrorObject(obj)//target should be the actual 
+{							//interactables P5 instance not a managment object
+	if (!obj.slave)// ensure a slave is present
+	{
+		obj.slave = new players.Sprite()
+	}
+	//relocate the slave to the opposite mirror region
+	obj.slave.x = (obj.x * -1) 
+	obj.slave.y = (obj.x * -1) 
+	if (obj.slave.x < 0)
+	{
+		obj.slave.x-=playerHorizon
+	}
+	else
+	{
+		obj.slave.x-=playerHorizon
+	}
+	if (obj.slave.y < 0)
+	{
+		obj.slave.y-=playerHorizon
+	}
+	else
+	{
+		obj.slave.y-=playerHorizon
+	}
+
+
+}
+
+
+
+function checkHP()
+{
 	
 	//tracks and updates player health, makes according changes to UI (health bars)
 	
@@ -153,7 +263,7 @@ function checkHP(){
 function runTorp(){
 	
 	//movement code for torpedos and tracking
-	//no targeting system yet so the opposing player is hardcoded as the target
+	//targeting system implemented so the opposing player is no longer hardcoded as the target
 	
 	for (i=0; i < torpedos.length; i++){
 		console.log(torpedos[i])
@@ -182,17 +292,15 @@ function launchTorp(playerID, target){
 		}
 
 	}
-
-
-		
-
-
 		if (( target != null) && (torpedoAvalibility)){
 			console.log("target valid")
+
+			let torpOriginVector = calculateBearingLineEnd( contros[playerID].rightStick.bearing , 50)
+
 			let torp = {}
 
 			torp.owner = playerID
-			torp.obj =  new Sprite(roster[playerID].obj.x, roster[playerID].obj.y, [
+			torp.obj =  new Sprite(roster[playerID].obj.x + torpOriginVector.x, roster[playerID].obj.y + torpOriginVector.y, [
 			[35, 3],
 			[-35, 3],
 			[0, -6]
@@ -215,6 +323,8 @@ function launchTorp(playerID, target){
 					if (torpedos[i] == null)
 						{
 							torpedos[i]=torp
+							torpedosObjs.add(torp.obj)
+
 							found = true
 						}
 				}
@@ -223,9 +333,6 @@ function launchTorp(playerID, target){
 					torpedos.push(torp)
 					torpedosObjs.add(torp.obj)
 				}
-	
-	
-	
 		}
 	}
 
@@ -235,7 +342,7 @@ function launchTorp(playerID, target){
 	function fireGun(playerID, bearing, power){
 		console.log("gunFireTriggered")
 			
-		let bulletOriginVector = calculateBearingLineEnd( bearing , 100)
+		let bulletOriginVector = calculateBearingLineEnd( bearing , 50)
 				
 			let bullet = {}
 
@@ -283,7 +390,7 @@ function launchTorp(playerID, target){
 
 
 		
-function findBearing(x,y){
+function findBearing(x,y){// finds a bearing from the origin to the coordinates
 	let theta = Math.atan2(y, x); // atan2 handles the quadrant adjustments
     let bearing = theta * (180 / Math.PI); // Convert radians to degrees
 	if (bearing < 0) 
@@ -293,7 +400,12 @@ function findBearing(x,y){
 	return bearing
 }
 
-function calculateBearingLineEnd(bearing, length) {
+function findRadius(x,y)// finds the radius of the circle drawn 
+{						// through a point, with its center at the origin
+	return Math.sqrt(x**2+y**2)
+}
+
+function calculateBearingLineEnd(bearing, length) {// converts polar to carteasian coords
 	let x
 	let y
 	switch (true)
@@ -327,7 +439,7 @@ function calculateBearingLineEnd(bearing, length) {
   }
 
 
-
+                                                                              
 
 function ctrl(playerID){
 //use of contros[playerID] instead of contros, allows inputs from multiple controlers via increasing the contros[] array's index
@@ -378,7 +490,6 @@ function ctrl(playerID){
 							
 							
 
-
 						}
 					else
 					{
@@ -404,7 +515,8 @@ function ctrl(playerID){
 								
 
 								// then check for overlaps with valid targets
-								for (let i of interactables)
+								for (let i of interactables)// of means i is the item not the index
+
 									{console.log("checkin overlap")
 										if (roster[playerID].targRay.overlaps(i))
 										{
@@ -642,8 +754,8 @@ function keyPressed(){
 function draw() {
 	clear()
 	background(0)
-
+	enforceBorders()
 	keyPressed()
 	runTorp()
-	checkHP()
+	followCamera(roster[0].obj)
   }
