@@ -1,24 +1,22 @@
- 
 // initialising variables
 
-roster = []
-torpedos = []
-bullets = []
-
+roster = [];
+torpedos = [];
+bullets = [];
+mini = {};
 // player health
-var HPA = 1.0
-var HPB = 1.0
-
-
-
-
-
+var HPA = 1.0;
+var HPB = 1.0;
 
 function setup() {
-	createCanvas(600,600);
+	createCanvas(900, 900);
 
 	background(0);
-	console.log("main start")	
+	console.log("main start");
+
+	// allSprites.autoUpdate = false; // Disable automatic update so i can draw both (No longer applicable)
+	// p5 and p5play in a controlled way (see draw())
+
 	// border to prevent loss of ships in testing <disabled>
 	// border = new Sprite(width/2, height/2, width, height);
 	// border.shape = 'chain'
@@ -28,91 +26,77 @@ function setup() {
 	// find canvas resoloution / 1920X1080 (typical size)
 
 	// rescale = canvas.w/1920
-	
+
 	// camera.zoom = rescale  </abandoned solution>
-
-
 
 	//calculate player horizon
 	//    _______
-	//   √a^2+b^2 = c  
+	//   √a^2+b^2 = c
 	//
 	//to find hypotenuse of a quarter of the
 	// circumcircle's rectangle (viewport)
-	
-	playerHorizon = findRadius(canvas.hw,canvas.hh)
-	 
-	// select a world radius that is 2x the diameter of 
+
+	playerHorizon = findRadius(canvas.hw, canvas.hh);
+
+	// select a world radius that is 2x the diameter of
 	// the players vision, which is 2x the player's horizon radius
-	worldRadius = playerHorizon*2*2
-	bufferRadius = worldRadius + playerHorizon
-	
-
-
+	worldRadius = playerHorizon * 2 * 2;
+	bufferRadius = worldRadius + playerHorizon;
 
 	// setup players
 
-	interactables = new Group()
+	interactables = new Group();
 
-
-	players = new interactables.Group()
-	players.collider = "d"
-	players.color = "blue"
-	players.h = 25
-	players.w = 80
+	players = new interactables.Group();
+	players.collider = "d";
+	players.color = "blue";
+	players.h = 25;
+	players.w = 80;
 	players.textSize = 15;
 	players.text = "([]}--";
-	
-	addPlayerShip()
 
-	torpedosObjs = new interactables.Group()
-	bulletObjs = new interactables.Group()
-	
-	asteroids = new interactables.Group()
-	asteroids.diameter = 40
-	asteroids.collider = "d"
-	for (i=0;i< 5;i++)
-	{
-		asteroid = new asteroids.Sprite(((3/4)*width)+(i*10),(3/4)* height)
+	addPlayerShip();
+
+	torpedosObjs = new interactables.Group();
+	bulletObjs = new interactables.Group();
+
+	asteroids = new interactables.Group();
+	asteroids.diameter = 40;
+	asteroids.collider = "d";
+	for (i = 0; i < 5; i++) {
+		asteroid = new asteroids.Sprite((3 / 4) * width + i * 10, (3 / 4) * height);
 	}
 
-	//setup healthbars to show health (controlled in check health loop)
-	healthBarA = new Sprite()
-	healthBarA.collider = "n"
-	healthBarA.w = (width/2)-20	
-	healthBarA.h = 30
-	healthBarA.x = (healthBarA.w/2)+10
-	healthBarA.text = "BLUE"
-	healthBarA.y = 30
-	healthBarA.color = "red"
-	
-	healthBarB = new Sprite()
-	healthBarB.collider = "n"
-	healthBarB.w = (width/2)-20	
-	healthBarB.h = 30
-	healthBarB.x = width - (healthBarB.w/2)+10
-	healthBarB.text = "RED"
-	healthBarB.y = 30
-	healthBarB.color = "red"
-	
+	//setup healthbars to show health (controlled in check health loop) <abandoned>
+	// healthBarA = new Sprite();
+	// healthBarA.collider = "n";
+	// healthBarA.w = width / 2 - 20;
+	// healthBarA.h = 30;
+	// healthBarA.x = healthBarA.w / 2 + 10;
+	// healthBarA.text = "BLUE";
+	// healthBarA.y = 30;
+	// healthBarA.color = "red";
 
+	// healthBarB = new Sprite();
+	// healthBarB.collider = "n";
+	// healthBarB.w = width / 2 - 20;
+	// healthBarB.h = 30;
+	// healthBarB.x = width - healthBarB.w / 2 + 10;
+	// healthBarB.text = "RED";
+	// healthBarB.y = 30;
+	// healthBarB.color = "red";
 
-
-	
 	//bounciness(uncomment if bored)
-	
+
 	//  player.obj.bounciness = 1;
-	
-
 }
-
 
 // WIP for having UI fade when obstructed, might re-attempt
 
 // function fadeUI(){
 // 	opacity = 100
 // 	player.obj.overlaps(healthBarA && healthBarB)
-	
+
 // 	if ((player.obj.overlaps(healthBarA || healthBarB))&&(opacity > 5)){
 // 		opacity-=10
 // 		console.log("over")
@@ -124,50 +108,31 @@ function setup() {
 // 	healthBarB.color = color(255, 0, 0, opacity)
 // }
 
-
-	
-function addPlayerShip()
-	{
-		player = 
-		{
-			playerID: 0,
-			obj: null
-		}
-		player.obj = new players.Sprite()
-		player.obj.x = width / 4
-		player.obj.y = height / 4
-		player.obj.offset.x = 15
-		player.abilities = ["torpedo", "gun"]
-		player.abilityState = 0
-		roster[player.playerID] = player
-	}
-
-function followCamera(target)
-{
-
-	camera.x = target.x + (target.vel.x*-3) // follows with a delay based on
-	camera.y = target.y + (target.vel.y*-3) // the target's velocity
-
-}
- 
-
-
-function miniMap(player)
-{
-	ellipse(10,10,10,10)
+function addPlayerShip() {
+	player = {
+		playerID: 0,
+		obj: null,
+	};
+	player.obj = new players.Sprite();
+	player.obj.x = width / 4;
+	player.obj.y = height / 4;
+	player.obj.offset.x = 15;
+	player.abilities = ["torpedo", "gun"];
+	player.abilityState = 0;
+	roster[player.playerID] = player;
 }
 
-
-
-
-
+function followCamera(target) {
+	camera.x = target.x + target.vel.x * -3; // follows with a delay based on
+	camera.y = target.y + target.vel.y * -3; // the target's velocity
+}
 
 // function updateInteractables(){<abandoned solution>
 // 	interactables.removeAll()
 // 	for (let i in roster){
 // 		interactables.add(roster[i].obj)
 // 	}
-	
+
 // 	for (let i in asteroids){
 // 		interactables.add(asteroids[i])
 // 	}
@@ -177,496 +142,449 @@ function miniMap(player)
 // 	}
 // }</abandoned solution>
 
-function enforceBorders()
-{
-	for ( i of interactables)//check every game object
-	{
-		objectRadius = findRadius(i.x,i.y)//determine distance from map core
-		if (objectRadius > worldRadius)//assess zoneing
-		{
-			if (objectRadius < bufferRadius)
-			{
+function enforceBorders() {
+	for (i of interactables) {
+		//check every game object
+		objectRadius = findRadius(i.x, i.y); //determine distance from map core
+		if (objectRadius > worldRadius) {
+			//assess zoneing
+			if (objectRadius < bufferRadius) {
 				//mirror the object
-				mirrorObject(i)
-			}
-			else
-			{
+				mirrorObject(i);
+			} else {
 				//teleport the object
-				crossBorder(i)
-				i.slave = null // remove mirrored slave
+				crossBorder(i);
+				endMirror(i); // remove mirrored slave
 			}
-		}
-		else
-		{
-			i.slave = null	// remove mirrored slave
+		} else {
+			endMirror(i);
 		}
 	}
 }
 
-
-function crossBorder(obj)
-{
-	obj.x *= -1	//teleports an object to the opposite end of the map
-	obj.y *= -1
+function crossBorder(obj) {
+	obj.x *= -1; //teleports an object to the opposite end of the map
+	obj.y *= -1;
 }
 
-function mirrorObject(obj)//target should be the actual 
-{							//interactables P5 instance not a managment object
-	if (!obj.slave)// ensure a slave is present
-	{
-		obj.slave = new players.Sprite()
+function endMirror(obj) {
+	if (obj.slave) {
+		obj.slave.remove();
+	}
+}
+
+function mirrorObject(obj) {
+	//target should be the actual
+	//interactables P5 instance not a managment object
+	if (!obj.slave) {
+		// ensure a slave is present
+		obj.slave = new players.Sprite();
 	}
 	//relocate the slave to the opposite mirror region
-	obj.slave.x = (obj.x * -1) 
-	obj.slave.y = (obj.x * -1) 
-	if (obj.slave.x < 0)
-	{
-		obj.slave.x-=playerHorizon
+	obj.slave.x = obj.x * -1;
+	obj.slave.y = obj.x * -1;
+	if (obj.slave.x < 0) {
+		obj.slave.x -= playerHorizon;
+	} else {
+		obj.slave.x -= playerHorizon;
 	}
-	else
-	{
-		obj.slave.x-=playerHorizon
+	if (obj.slave.y < 0) {
+		obj.slave.y -= playerHorizon;
+	} else {
+		obj.slave.y -= playerHorizon;
 	}
-	if (obj.slave.y < 0)
-	{
-		obj.slave.y-=playerHorizon
-	}
-	else
-	{
-		obj.slave.y-=playerHorizon
-	}
-
-
 }
 
+//function checkHP()<abandoned solution>
+// {
 
+// 	//tracks and updates player health, makes according changes to UI (health bars)
 
-function checkHP()
-{
-	
-	//tracks and updates player health, makes according changes to UI (health bars)
-	
-	healthBarA.w = ((width/2)-20)*HPA
-	healthBarA.x = (healthBarA.w/2)+10	
-	
-	healthBarB.w = ((width/2)-20)*HPB
-	healthBarB.x = width - (healthBarB.w/2)+10	
-	// check death (ends game)
-	if (HPA<=0){
-		player.obj.remove()
-		alert("Player RED wins")
-		throw new Error('Game Over')
-	}
+// 	healthBarA.w = ((width/2)-20)*HPA
+// 	healthBarA.x = (healthBarA.w/2)+10
 
-}
+// 	healthBarB.w = ((width/2)-20)*HPB
+// 	healthBarB.x = width - (healthBarB.w/2)+10
+// 	// check death (ends game)
+// 	if (HPA<=0){
+// 		player.obj.remove()
+// 		alert("Player RED wins")
+// 		throw new Error('Game Over')
+// 	}
 
-function runTorp(){
-	
+// }</abandoned solution>
+
+function runTorp() {
 	//movement code for torpedos and tracking
 	//targeting system implemented so the opposing player is no longer hardcoded as the target
-	
-	for (i=0; i < torpedos.length; i++){
-		console.log(torpedos[i])
-		if(torpedos[i].obj.collides(torpedos[i].target) == false){
-			torpedos[i].obj.rotateTowards(torpedos[i].target, 0.1, 0)
-			torpedos[i].obj.moveTo(torpedos[i].target.x, torpedos[i].target.y, 6)
-		}
-		else{
-			console.log()
-			torpedos[i].obj.remove()
+
+	for (i = 0; i < torpedos.length; i++) {
+		console.log(torpedos[i]);
+		if (torpedos[i].obj.collides(torpedos[i].target) == false) {
+			torpedos[i].obj.rotateTowards(torpedos[i].target, 0.1, 0);
+			torpedos[i].obj.moveTo(torpedos[i].target.x, torpedos[i].target.y, 6);
+		} else {
+			console.log();
+			torpedos[i].obj.remove();
 			clearTimeout(torpedos[i].lifespan);
-			torpedos.splice(i)
-			
+			torpedos.splice(i);
 		}
 	}
-
 }
 
-
-function launchTorp(playerID, target){
-	console.log("torplaunchtriggered")
-	let torpedoAvalibility = true
-	for (i=0; i < torpedos.length; i++){
-		if (torpedos[i].owner == playerID){
-			torpedoAvalibility = false
-		}
-
-	}
-		if (( target != null) && (torpedoAvalibility)){
-			console.log("target valid")
-
-			let torpOriginVector = calculateBearingLineEnd( contros[playerID].rightStick.bearing , 50)
-
-			let torp = {}
-
-			torp.owner = playerID
-			torp.obj =  new Sprite(roster[playerID].obj.x + torpOriginVector.x, roster[playerID].obj.y + torpOriginVector.y, [
-			[35, 3],
-			[-35, 3],
-			[0, -6]
-		]) 
-	
-			torp.target = target
-			torp.status = false
-			torp.lifespan = setTimeout(function(){
-				
-				torp.obj.remove()
-				torp = null 
-			}  , 5000); // Time in milliseconds (5000 ms = 5 seconds)
-	
-			//ensure torpedo takes first avalible slot
-	
-			found = false
-			for (i in torpedos)
-				{
-	
-					if (torpedos[i] == null)
-						{
-							torpedos[i]=torp
-							torpedosObjs.add(torp.obj)
-
-							found = true
-						}
-				}
-			if (found == false)
-				{
-					torpedos.push(torp)
-					torpedosObjs.add(torp.obj)
-				}
+function launchTorp(playerID, target) {
+	console.log("torplaunchtriggered");
+	let torpedoAvalibility = true;
+	for (i = 0; i < torpedos.length; i++) {
+		if (torpedos[i].owner == playerID) {
+			torpedoAvalibility = false;
 		}
 	}
+	if (target != null && torpedoAvalibility) {
+		console.log("target valid");
 
+		let torpOriginVector = calculateBearingLineEnd(
+			contros[playerID].rightStick.bearing,
+			50
+		);
 
+		let torp = {};
 
+		torp.owner = playerID;
+		torp.obj = new Sprite(
+			roster[playerID].obj.x + torpOriginVector.x,
+			roster[playerID].obj.y + torpOriginVector.y,
+			[
+				[35, 3],
+				[-35, 3],
+				[0, -6],
+			]
+		);
 
-	function fireGun(playerID, bearing, power){
-		console.log("gunFireTriggered")
-			
-		let bulletOriginVector = calculateBearingLineEnd( bearing , 50)
-				
-			let bullet = {}
+		torp.target = target;
+		torp.status = false;
+		torp.lifespan = setTimeout(function () {
+			torp.obj.remove();
+			torp = null;
+		}, 5000); // Time in milliseconds (5000 ms = 5 seconds)
 
-			bullet.owner = playerID
-			bullet.obj =  new Sprite(roster[playerID].obj.x + bulletOriginVector.x, roster[playerID].obj.y + bulletOriginVector.y, [
+		//ensure torpedo takes first avalible slot
+
+		found = false;
+		for (i in torpedos) {
+			if (torpedos[i] == null) {
+				torpedos[i] = torp;
+				torpedosObjs.add(torp.obj);
+
+				found = true;
+			}
+		}
+		if (found == false) {
+			torpedos.push(torp);
+			torpedosObjs.add(torp.obj);
+		}
+	}
+}
+
+function fireGun(playerID, bearing, power) {
+	console.log("gunFireTriggered");
+
+	let bulletOriginVector = calculateBearingLineEnd(bearing, 50);
+
+	let bullet = {};
+
+	bullet.owner = playerID;
+	bullet.obj = new Sprite(
+		roster[playerID].obj.x + bulletOriginVector.x,
+		roster[playerID].obj.y + bulletOriginVector.y,
+		[
 			[15, 5],
 			[-15, 5],
-			[0, -10]
-			]) 
-			
-			bullet.obj.bearing = bearing
-			bullet.obj.applyForce(0.5*power)
-			
+			[0, -10],
+		]
+	);
 
-			bullet.status = false
-			bullet.lifespan = setTimeout(function(){
-					
-			bullet.obj.remove()
-			bullet = null 
-			}  , 5000); // Time in milliseconds (5000 ms = 5 seconds)
-	
-			//ensure bullet takes first avalible slot
-	
-			found = false
-			for (i in bullets)
-				{
-	
-					if (bullets[i] == null)
-						{
-							bullets[i]=bullet
-							found = true
-						}
-				}
-			if (found == false)
-				{
-					bullets.push(bullet)
-					bulletObjs.add(bullet.obj)
-				}
-	
-			
-		
-			
+	bullet.obj.bearing = bearing;
+	bullet.obj.applyForce(0.5 * power);
+
+	bullet.status = false;
+	bullet.lifespan = setTimeout(function () {
+		bullet.obj.remove();
+		bullet = null;
+	}, 5000); // Time in milliseconds (5000 ms = 5 seconds)
+
+	//ensure bullet takes first avalible slot
+
+	found = false;
+	for (i in bullets) {
+		if (bullets[i] == null) {
+			bullets[i] = bullet;
+			found = true;
 		}
+	}
+	if (found == false) {
+		bullets.push(bullet);
+		bulletObjs.add(bullet.obj);
+	}
+}
 
-
-
-		
-function findBearing(x,y){// finds a bearing from the origin to the coordinates
+function findBearing(x, y) {
+	// finds a bearing from the origin to the coordinates
 	let theta = Math.atan2(y, x); // atan2 handles the quadrant adjustments
-    let bearing = theta * (180 / Math.PI); // Convert radians to degrees
-	if (bearing < 0) 
-		{
-			bearing += 360
-		}
-	return bearing
+	let bearing = theta * (180 / Math.PI); // Convert radians to degrees
+	if (bearing < 0) {
+		bearing += 360;
+	}
+	return bearing;
 }
 
-function findRadius(x,y)// finds the radius of the circle drawn 
-{						// through a point, with its center at the origin
-	return Math.sqrt(x**2+y**2)
+function findRadius(x, y) {
+	// finds the radius of the circle drawn
+	// through a point, with its center at the origin
+	return Math.sqrt(x ** 2 + y ** 2);
 }
 
-function calculateBearingLineEnd(bearing, length) {// converts polar to carteasian coords
-	let x
-	let y
-	switch (true)
-	{
-		case bearing>270:
-			theta = bearing -270
-			x = (sin(theta)*length)
-			y = -(cos(theta)*length)
+function calculateBearingLineEnd(bearing, length) {
+	// converts polar to carteasian coords
+	let x;
+	let y;
+	switch (true) {
+		case bearing > 270:
+			theta = bearing - 270;
+			x = sin(theta) * length;
+			y = -(cos(theta) * length);
 			break;
-		
-		case bearing>180:
-			theta = bearing -180
-			x = -(cos(theta)*length)
-			y = -(sin(theta)*length)
+
+		case bearing > 180:
+			theta = bearing - 180;
+			x = -(cos(theta) * length);
+			y = -(sin(theta) * length);
 			break;
-		
-		case bearing>90:
-			theta = bearing -90
-			x = -(sin(theta)*length)
-			y = cos(theta)*length
+
+		case bearing > 90:
+			theta = bearing - 90;
+			x = -(sin(theta) * length);
+			y = cos(theta) * length;
 			break;
 
 		case bearing >= 0:
-			theta = bearing
-			x = (cos(theta)*length)
-			y = (sin(theta)*length)
-
+			theta = bearing;
+			x = cos(theta) * length;
+			y = sin(theta) * length;
 	}
 
 	return createVector(x, y);
-  }
+}
 
+function ctrl(playerID) {
+	//use of contros[playerID] instead of contros, allows inputs from multiple controlers via increasing the contros[] array's index
+	if (contros[playerID]) {
+		roster[playerID].playerLocation = createVector(
+			roster[playerID].obj.x,
+			roster[playerID].obj.y
+		);
 
-                                                                              
-
-function ctrl(playerID){
-//use of contros[playerID] instead of contros, allows inputs from multiple controlers via increasing the contros[] array's index
-	if(contros[playerID])
-	{
-		roster[playerID].playerLocation = createVector(roster[playerID].obj.x, roster[playerID].obj.y)
-
-		contros[playerID].rightStick.bearing = findBearing(contros[playerID].rightStick.x,contros[playerID].rightStick.y)
+		contros[playerID].rightStick.bearing = findBearing(
+			contros[playerID].rightStick.x,
+			contros[playerID].rightStick.y
+		);
 
 		//hotbar switcher
-		if (contros[playerID].presses('left')){
-			if (roster[playerID].abilityState == 0)
-			{
-				
-				roster[playerID].abilityState = roster[playerID].abilities.length - 1
+		if (contros[playerID].presses("left")) {
+			if (roster[playerID].abilityState == 0) {
+				roster[playerID].abilityState = roster[playerID].abilities.length - 1;
+			} else {
+				roster[playerID].abilityState -= 1;
 			}
-			else
-			{
-				roster[playerID].abilityState -= 1
-			}
-			console.log(roster[playerID].abilityState)
+			console.log(roster[playerID].abilityState);
 		}
 
-		if (contros[playerID].presses('right')){
-			if (roster[playerID].abilityState == roster[playerID].abilities.length - 1)
-			{
-				
-				roster[playerID].abilityState = 0
+		if (contros[playerID].presses("right")) {
+			if (
+				roster[playerID].abilityState ==
+				roster[playerID].abilities.length - 1
+			) {
+				roster[playerID].abilityState = 0;
+			} else {
+				roster[playerID].abilityState += 1;
 			}
-			else
-			{
-				roster[playerID].abilityState += 1
-			}
-			console.log(roster[playerID].abilityState)
+			console.log(roster[playerID].abilityState);
 		}
 
-		// torpedo control code 
-		if (roster[playerID].abilities[roster[playerID].abilityState] == "torpedo")
-		{
-			if (contros[playerID].r > 0)
-				{
-				
-					if (contros[playerID].r < 2)
-						{
-							// create ray
-							rayDistance = 600
-							roster[playerID].targRay = new Sprite(roster[playerID].obj.x + rayDistance, roster[playerID].obj.y, 1000, 1, "n")
-							
-							
+		// torpedo control code
+		if (
+			roster[playerID].abilities[roster[playerID].abilityState] == "torpedo"
+		) {
+			if (contros[playerID].r > 0) {
+				if (contros[playerID].r < 2) {
+					// create ray
+					rayDistance = 600;
+					roster[playerID].tarffgRay = new Sprite(
+						roster[playerID].obj.x + rayDistance,
+						roster[playerID].obj.y,
+						1000,
+						1,
+						"n"
+					);
+				} else {
+					// check ray existence
+					if (roster[playerID].targRay != null) {
+						console.log("ray exists");
 
+						// take input from right stick and point ray there
+
+						if (
+							contros[playerID].rightStick.y < -0.2 ||
+							contros[playerID].rightStick.y > 0.2 ||
+							contros[playerID].rightStick.x < -0.2 ||
+							contros[playerID].rightStick.x > 0.2
+						) {
+							roster[playerID].targRay.rotation =
+								contros[playerID].rightStick.bearing;
 						}
-					else
-					{
-						// check ray existence
-						if (roster[playerID].targRay != null)
-							{console.log("ray exists")
-								
-								// take input from right stick and point ray there
 
-								if (((contros[playerID].rightStick.y < -0.2) || (contros[playerID].rightStick.y > 0.2))||((contros[playerID].rightStick.x < -0.2) || (contros[playerID].rightStick.x > 0.2)))
-									{
-										
-										roster[playerID].targRay.rotation = contros[playerID].rightStick.bearing
-									}
+						//update ray X,Y cords
 
-								//update ray X,Y cords
-								
-								roster[playerID].targRay.LocationVector = calculateBearingLineEnd( contros[playerID].rightStick.bearing , rayDistance)
+						roster[playerID].targRay.LocationVector = calculateBearingLineEnd(
+							contros[playerID].rightStick.bearing,
+							rayDistance
+						);
 
-								roster[playerID].targRay.x = roster[playerID].obj.x + roster[playerID].targRay.LocationVector.x
-								roster[playerID].targRay.y = roster[playerID].obj.y + roster[playerID].targRay.LocationVector.y
+						roster[playerID].targRay.x =
+							roster[playerID].obj.x +
+							roster[playerID].targRay.LocationVector.x;
+						roster[playerID].targRay.y =
+							roster[playerID].obj.y +
+							roster[playerID].targRay.LocationVector.y;
 
-								
-
-								// then check for overlaps with valid targets
-								for (let i of interactables)// of means i is the item not the index
-
-									{console.log("checkin overlap")
-										if (roster[playerID].targRay.overlaps(i))
-										{
-											if (i != roster[playerID].obj) 
-												{
-													console.log("Overlap found")
-													roster[playerID].target = i
-												}
-										}
-										
-									}	
-
-
-
-							}
-					}
-					
-				}
-			else  
-				{
-					if (roster[playerID].prevFramePressedRB == true)
-						{console.log("fire!")
-							roster[playerID].targRay.remove()
-							launchTorp(playerID,roster[playerID].target)
-							roster[playerID].target = null
-						}
-					
-				}
-		}
-
-
-
-		// gun control code 
-		if (roster[playerID].abilities[roster[playerID].abilityState] == "gun")
-			{ console.log("gun")
-				if (contros[playerID].r > 0)
-					{
-					
-						if (contros[playerID].r < 2)
-							{
-								// create ray
-								rayDistance = 100
-								rayLength = 200
-								roster[playerID].targRay = new Sprite(roster[playerID].obj.x + rayDistance, roster[playerID].obj.y, rayLength, 1, "n")
-								
-								
-	
-	
-							}
-						else
-						{
-							// check ray existence
-							if (roster[playerID].targRay != null)
-								{console.log("ray exists")
-									
-									// take input from right stick and point ray there
-	
-									if (((contros[playerID].rightStick.y < -0.2) || (contros[playerID].rightStick.y > 0.2))||((contros[playerID].rightStick.x < -0.2) || (contros[playerID].rightStick.x > 0.2)))
-										{
-											
-											roster[playerID].targRay.rotation = contros[playerID].rightStick.bearing
-										}
-	
-									//update ray X,Y cords
-									
-									roster[playerID].targRay.LocationVector = calculateBearingLineEnd( contros[playerID].rightStick.bearing , rayDistance)
-	
-									roster[playerID].targRay.x = roster[playerID].obj.x + roster[playerID].targRay.LocationVector.x
-									roster[playerID].targRay.y = roster[playerID].obj.y + roster[playerID].targRay.LocationVector.y
-									rayDistance += 1
-									rayLength += 1
-									roster[playerID].targRay.width = rayLength
-
+						// then check for overlaps with valid targets
+						for (let i of interactables) {
+							// of means i is the item not the index
+							console.log("checkin overlap");
+							if (roster[playerID].targRay.overlaps(i)) {
+								if (i != roster[playerID].obj) {
+									console.log("Overlap found");
+									roster[playerID].target = i;
 								}
-						}
-						
-					}
-				else  
-					{
-						if (roster[playerID].prevFramePressedRB == true)
-							{console.log("fire!")
-								
-								// fire gun
-
-								fireGun(playerID, contros[playerID].rightStick.bearing, rayDistance)
-
-								roster[playerID].targRay.remove()
 							}
-						
+						}
 					}
+				}
+			} else {
+				if (roster[playerID].prevFramePressedRB == true) {
+					console.log("fire!");
+					roster[playerID].targRay.remove();
+					launchTorp(playerID, roster[playerID].target);
+					roster[playerID].target = null;
+				}
 			}
-
-
-
-		if (contros[playerID].lt > 0.2){
-			roster[playerID].obj.rotationSpeed -= 0.01 *contros[playerID].lt
 		}
-		if (contros[playerID].rt > 0.2){
-			roster[playerID].obj.rotationSpeed += 0.01 *contros[playerID].rt
-		}
-		if (contros[playerID].leftStick.y < -0.2){
 
+		// gun control code
+		if (roster[playerID].abilities[roster[playerID].abilityState] == "gun") {
+			console.log("gun");
+			if (contros[playerID].r > 0) {
+				if (contros[playerID].r < 2) {
+					// create ray
+					rayDistance = 100;
+					rayLength = 200;
+					roster[playerID].targRay = new Sprite(
+						roster[playerID].obj.x + rayDistance,
+						roster[playerID].obj.y,
+						rayLength,
+						1,
+						"n"
+					);
+				} else {
+					// check ray existence
+					if (roster[playerID].targRay != null) {
+						console.log("ray exists");
+
+						// take input from right stick and point ray there
+
+						if (
+							contros[playerID].rightStick.y < -0.2 ||
+							contros[playerID].rightStick.y > 0.2 ||
+							contros[playerID].rightStick.x < -0.2 ||
+							contros[playerID].rightStick.x > 0.2
+						) {
+							roster[playerID].targRay.rotation =
+								contros[playerID].rightStick.bearing;
+						}
+
+						//update ray X,Y cords
+
+						roster[playerID].targRay.LocationVector = calculateBearingLineEnd(
+							contros[playerID].rightStick.bearing,
+							rayDistance
+						);
+
+						roster[playerID].targRay.x =
+							roster[playerID].obj.x +
+							roster[playerID].targRay.LocationVector.x;
+						roster[playerID].targRay.y =
+							roster[playerID].obj.y +
+							roster[playerID].targRay.LocationVector.y;
+						rayDistance += 1;
+						rayLength += 1;
+						roster[playerID].targRay.width = rayLength;
+					}
+				}
+			} else {
+				if (roster[playerID].prevFramePressedRB == true) {
+					console.log("fire!");
+
+					// fire gun
+
+					fireGun(playerID, contros[playerID].rightStick.bearing, rayDistance);
+
+					roster[playerID].targRay.remove();
+				}
+			}
+		}
+
+		if (contros[playerID].lt > 0.2) {
+			roster[playerID].obj.rotationSpeed -= 0.001 * contros[playerID].lt;
+		}
+		if (contros[playerID].rt > 0.2) {
+			roster[playerID].obj.rotationSpeed += 0.001 * contros[playerID].rt;
+		}
+		if (contros[playerID].leftStick.y < -0.2) {
 			roster[playerID].obj.bearing = roster[playerID].obj.rotation;
-			roster[playerID].obj.applyForce(-11*contros[playerID].leftStick.y);
+			roster[playerID].obj.applyForce(-11 * contros[playerID].leftStick.y);
 		}
-		if (contros[playerID].leftStick.y > 0.2){
-
+		if (contros[playerID].leftStick.y > 0.2) {
 			roster[playerID].obj.bearing = roster[playerID].obj.rotation + 180;
-			roster[playerID].obj.applyForce(2*contros[playerID].leftStick.y);
+			roster[playerID].obj.applyForce(2 * contros[playerID].leftStick.y);
 		}
-		if (contros[playerID].leftStick.x > 0.2){
-
+		if (contros[playerID].leftStick.x > 0.2) {
 			roster[playerID].obj.bearing = roster[playerID].obj.rotation + 90;
 			roster[playerID].obj.applyForce(2 * contros[playerID].leftStick.x);
 		}
-		if (contros[playerID].leftStick.x < -0.2){
-
+		if (contros[playerID].leftStick.x < -0.2) {
 			roster[playerID].obj.bearing = roster[playerID].obj.rotation + 270;
 			roster[playerID].obj.applyForce(-2 * contros[playerID].leftStick.x);
 		}
 
-
-
-
 		//track state for next frame
-		if ((contros[playerID].r>=1) )
-			{
-				roster[playerID].prevFramePressedRB = true
-				
-			}
-		else
-			{
-				roster[playerID].prevFramePressedRB = false
-			}
-  }
+		if (contros[playerID].r >= 1) {
+			roster[playerID].prevFramePressedRB = true;
+		} else {
+			roster[playerID].prevFramePressedRB = false;
+		}
+	}
 }
 
 //function ctrlB(){          disabled
-// 	if(contros[1]) 
+// 	if(contros[1])
 // 	{
-		
-		       
 
-		
 // 		if ((contros[1].r) && (torpReadyB == true)){
 // 			torpB =  new torpedoB.Sprite(playerB.x, playerB.y, [
 // 				[25, 5],
 // 				[-25, 5],
 // 				[0, -10]
-// 			]) 
+// 			])
 // 			torpReadyB = false
 // 			torpBLifespan = setTimeout(function() {
 // 				torpB.remove()
@@ -698,11 +616,6 @@ function ctrl(playerID){
 // 	}
 //}
 
-
-
-
-
-
 // old keyboard support for player 2 (I may decide to allow dual input from keyboard and controller)
 // function ctrlB(){
 // 		if ((kb.pressed('p'))&&(torpReadyB== true)){
@@ -710,7 +623,7 @@ function ctrl(playerID){
 // 		[25, 5],
 // 		[-25, 5],
 // 		[0, -10]
-// 	]) 
+// 	])
 // 			torpReadyB = false
 // 			torpBLifespan = setTimeout(function() {
 //     torpB.remove()
@@ -718,44 +631,124 @@ function ctrl(playerID){
 // }, 5000); // Time in milliseconds (5000 ms = 5 seconds)
 // 	}
 // 	if (kb.pressing('u')){
-// 		playerB.rotationSpeed -= 0.1 
+// 		playerB.rotationSpeed -= 0.1
 // 	}
 // 		if (kb.pressing('o')){
-// 		playerB.rotationSpeed += 0.1 
+// 		playerB.rotationSpeed += 0.1
 // 	}
 // 			if (kb.pressing('i')){
-			
+
 // 			playerB.bearing = playerB.rotation;
 // 			playerB.applyForce(11);
 // 	}
 // 				if (kb.pressing('k')){
-			
+
 // 			playerB.bearing = playerB.rotation + 180;
 // 			playerB.applyForce(1);
 // 	}
 // 				if (kb.pressing('l')){
-			
+
 // 			playerB.bearing = playerB.rotation + 90;
 // 			playerB.applyForce(1);
 // 	}
 // 				if (kb.pressing('j')){
-			
+
 // 			playerB.bearing = playerB.rotation + 270;
 // 			playerB.applyForce(1);
 // 	}
 // }
 
-function keyPressed(){
-	ctrl(0)
-	
+function uiHandler(user) {
+	// only pass interactables
+	miniMap(user);
 }
 
+function miniMap(user) {
+	push();
+	mini.x = 120;
+	mini.y = 120;
+	vectorTo = {};
+	vectorTo.x = -user.x; //finds xy vector to the core from the user
+	vectorTo.y = -user.y;
+	let dist = findRadius(vectorTo.x, vectorTo.y);
+
+	stroke("white");
+	fill("#03004090");
+
+	circle(mini.x, mini.y, 2 * (75 + bufferRadius / 250) + 25);
+	stroke("#030040");
+	fill("#030040");
+	ellipse(mini.x, mini.y, 150, 150);
+
+	stroke("white");
+	fill("white");
+
+	if (findRadius(vectorTo.x, vectorTo.y) < playerHorizon) {
+		ellipse(
+			mini.x + (vectorTo.x / playerHorizon) * 75,
+			mini.y + (vectorTo.y / playerHorizon) * 75,
+			10,
+			10
+		);
+	} else {
+		let angle = findBearing(vectorTo.x, vectorTo.y);
+		let pointerStart = calculateBearingLineEnd(angle, 75),
+			pointerEnd = calculateBearingLineEnd(
+				angle,
+				75 + (dist / bufferRadius) * 25
+			);
+		line(
+			mini.x + pointerStart.x,
+			mini.y + pointerStart.y,
+			mini.x + pointerEnd.x,
+			mini.y + pointerEnd.y
+		);
+	}
+	push();
+	translate(mini.x, mini.y);
+	rotate(user.rotation - 90);
+	fill("#030040");
+	stroke("white");
+	triangle(0, 4, 2, -4, -2, -4);
+	pop();
+	for (i of asteroids) {
+		vectorTo.x = i.x - user.x; //finds xy vector to the object from the user
+		vectorTo.y = i.y - user.y;
+		if (findRadius(vectorTo.x, vectorTo.y) < playerHorizon) {
+			ellipse(
+				mini.x + (vectorTo.x / playerHorizon) * 75,
+				mini.y + (vectorTo.y / playerHorizon) * 75,
+				1,
+				1
+			);
+		} else {
+			let angle = findBearing(vectorTo.x, vectorTo.y);
+			let pointerStart = calculateBearingLineEnd(angle, 75);
+			fill("white");
+			stroke("white");
+			circle(mini.x + pointerStart.x, mini.y + pointerStart.y, 1);
+		}
+	}
+
+	pop();
+}
+
+function keyPressed() {
+	ctrl(0);
+}
 
 function draw() {
-	clear()
-	background(0)
-	enforceBorders()
-	keyPressed()
-	runTorp()
-	followCamera(roster[0].obj)
-  }
+	clear();
+	// interactables.update();    broken solution 
+
+	background(0);
+	enforceBorders();
+	keyPressed();
+	runTorp();
+	followCamera(roster[0].obj);
+
+	camera.off();
+	uiHandler(roster[0].obj);
+
+	camera.on();
+}
