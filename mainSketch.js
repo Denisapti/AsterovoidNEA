@@ -419,7 +419,7 @@ function ctrl(playerID) {
 				if (contros[playerID].r < 2) {
 					// create ray
 					rayDistance = 600;
-					roster[playerID].tarffgRay = new Sprite(
+					roster[playerID].targRay = new Sprite(
 						roster[playerID].obj.x + rayDistance,
 						roster[playerID].obj.y,
 						1000,
@@ -473,9 +473,10 @@ function ctrl(playerID) {
 			} else {
 				if (roster[playerID].prevFramePressedRB == true) {
 					console.log("fire!");
-					roster[playerID].targRay.remove();
+					
 					launchTorp(playerID, roster[playerID].target);
 					roster[playerID].target = null;
+					roster[playerID].targRay.remove();
 				}
 			}
 		}
