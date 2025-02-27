@@ -3,6 +3,7 @@
 roster = [];
 torpedos = [];
 bullets = [];
+asteroids = []
 mini = {};
 // player health
 var HPA = 1.0;
@@ -46,6 +47,11 @@ function setup() {
 	// setup players
 
 	interactables = new Group();
+	
+	valuables = new interactables.Group();
+	valuables.collider = "d";
+	valuables.color = "yellow";
+	valuables.diameter = 20;
 
 	players = new interactables.Group();
 	players.collider = "d";
@@ -60,12 +66,11 @@ function setup() {
 	torpedosObjs = new interactables.Group();
 	bulletObjs = new interactables.Group();
 
-	asteroids = new interactables.Group();
-	asteroids.diameter = 40;
-	asteroids.collider = "d";
-	for (i = 0; i < 5; i++) {
-		asteroid = new asteroids.Sprite((3 / 4) * width + i * 10, (3 / 4) * height);
-	}
+	asteroidNodes = new interactables.Group();
+	asteroidNodes.health = 5
+	asteroidNodes.diameter = 10;
+	asteroidNodes.collider = "d";
+	genAsteroid(0,0)
 
 	//setup healthbars to show health (controlled in check health loop) <abandoned>
 	// healthBarA = new Sprite();
@@ -117,12 +122,132 @@ function addPlayerShip() {
 	player.obj.x = width / 4;
 	player.obj.y = height / 4;
 	player.obj.offset.x = 15;
+	player.obj.health = 100
+	player.obj.maxHealth = 100
 	player.abilities = ["torpedo", "gun"];
 	player.abilityState = 0;
 	roster[player.playerID] = player;
 }
 
-function followCamera(target) {
+function genAsteroid(xVal, yVal)
+{
+	//create contoller object
+	let maxDist = 20
+	asteroid = {}
+	asteroid.nodes = []
+	asteroid.normal = 10
+	asteroid.valuable = 0
+	asteroid.size = asteroid.normal + asteroid.valuable
+	asteroid.centerMass = 
+	{
+		x: xVal,
+		y: yVal
+	}
+	for (i=0; i<asteroid.normal; i++)
+	{
+		let xNode = getRandomNumber(-maxDist, maxDist) + asteroid.centerMass.x
+		let yNode = getRandomNumber(-maxDist, maxDist) + asteroid.centerMass.y
+		asteroidNode = new asteroidNodes.Sprite(xNode, yNode)
+		asteroid.nodes = push(asteroidNode)
+	}
+
+
+	//inject controller obj into array at first availible position
+	let success = false
+	for (i in asteroids)
+	{
+		if ((!asteroids[i]) && (!success))
+		{
+			asteroids[i] = asteroid
+			success = true
+
+		}
+	}
+
+
+}
+
+function updateAsteroids()
+{
+	/// make astwoid stay together
+}
+
+function detectCollision() {
+    //detects collisions between all objects in interactables
+    for (let i of interactables) {
+        for (let j of interactables) {
+            if (i != j) {
+                if (i.collides(j)) {
+                    //collision detected
+                    // console.log("collision detected")
+
+                    // check if i is in valuables group
+                    if (valuables.contains(i)) {
+                        // if i is a valuable, it is collected
+                        i.remove();
+                        j.value += i.value;
+                    } 
+					else if (valuables.contains(j)) {
+                        // if j is a valuable, it is collected
+                        j.remove();
+                        i.value += j.value;
+                    } 
+					else {
+                        // kinetic damage is applied to both objects
+                        kineticDamage(i, j);
+                    }
+                }
+            }
+        }
+    }
+}
+
+function kineticDamage(obj1, obj2) {
+	// find the relative speed of the two objects
+	let relativeSpeed = p5.Vector.sub(obj1.vel, obj2.vel).mag();
+	
+	// find damage for obj1
+	let dmg1 = relativeSpeed * (obj2.mass/obj1.mass)
+	// find damage for obj2
+	let dmg2 = relativeSpeed * (obj1.mass/obj2.mass)
+
+	// apply damage to objs
+
+	obj1.health -= dmg1
+	obj2.health -= dmg2
+}
+
+function detectDeath() {
+	//detects if any object has health below 0
+	for (let i of interactables) {
+		if (i.health <= 0) {
+			if (players.contains(i))
+			{
+				alert("you died")
+
+			}
+
+			killObj(i);
+		}
+	}
+}
+
+
+function killObj(obj) {
+	// spawns a valuable where the object was
+	let valuable = new valuables.Sprite(obj.x, obj.y);
+	// valueables inherit the value of the object
+	valuable.value = obj.value	
+
+
+
+	//removes object from interactables
+	obj.remove();
+}
+
+function followCamera(target) 
+{
+
 	camera.x = target.x + target.vel.x * -3; // follows with a delay based on
 	camera.y = target.y + target.vel.y * -3; // the target's velocity
 }
@@ -133,8 +258,8 @@ function followCamera(target) {
 // 		interactables.add(roster[i].obj)
 // 	}
 
-// 	for (let i in asteroids){
-// 		interactables.add(asteroids[i])
+// 	for (let i in asteroidNodes){
+// 		interactables.add(asteroidNodes[i])
 // 	}
 
 // 	for (let i in torpedos){
@@ -263,6 +388,7 @@ function launchTorp(playerID, target) {
 
 		torp.target = target;
 		torp.status = false;
+		torp.obj.health = 10
 		torp.lifespan = setTimeout(function () {
 			torp.obj.remove();
 			torp = null;
@@ -305,6 +431,7 @@ function fireGun(playerID, bearing, power) {
 	);
 
 	bullet.obj.bearing = bearing;
+	bullet.health = 10
 	bullet.obj.applyForce(0.5 * power);
 
 	bullet.status = false;
@@ -376,7 +503,20 @@ function calculateBearingLineEnd(bearing, length) {
 	return createVector(x, y);
 }
 
+function getRandomNumber(min, max) {
+	return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
 function ctrl(playerID) {
+
+	//health debug suicide code
+	if (kb.presses("d"))
+	{
+		roster[playerID].obj.health -= 1
+	}
+
+
+
 	//use of contros[playerID] instead of contros, allows inputs from multiple controlers via increasing the contros[] array's index
 	if (contros[playerID]) {
 		roster[playerID].playerLocation = createVector(
@@ -659,10 +799,44 @@ function ctrl(playerID) {
 // 	}
 // }
 
-function uiHandler(user) {
+function uiHandler(user) 
+{
 	// only pass interactables
+
+	healthIndicator(user)
 	miniMap(user);
+	
 }
+
+function healthIndicator(user)
+{
+	
+	push()
+	let location =  //determine circle location
+	{
+		x: user.vel.x * -3,
+		y: user.vel.y * -3
+	} 
+
+	//find arc angle 
+	let hpMax = user.maxHealth
+	let hp = user.health
+	let arcAngle = (hp * 360)/hpMax
+	//determine start angle
+	startAngle = user.rotation - (arcAngle/2)
+	if (startAngle < 0){startAngle+=360}
+	//determine end angle
+	let endAngle = startAngle + arcAngle
+	if (endAngle > 360){endAngle-=360}
+
+	//draw arc
+	stroke(255,0,0)
+	fill(255,0,0,150)
+	arc((width/2)-(location.x), (height/2)-(location.y), 100, 100, startAngle, endAngle)
+	pop()
+
+}
+
 
 function miniMap(user) {
 	push();
@@ -712,7 +886,7 @@ function miniMap(user) {
 	stroke("white");
 	triangle(0, 4, 2, -4, -2, -4);
 	pop();
-	for (i of asteroids) {
+	for (i of asteroidNodes) { // MAPS ASTEROID nodes
 		vectorTo.x = i.x - user.x; //finds xy vector to the object from the user
 		vectorTo.y = i.y - user.y;
 		if (findRadius(vectorTo.x, vectorTo.y) < playerHorizon) {
@@ -735,7 +909,7 @@ function miniMap(user) {
 }
 
 function keyPressed() {
-	ctrl(0);
+	ctrl(0);// runs the control function for the first player in roster
 }
 
 function draw() {
@@ -746,10 +920,21 @@ function draw() {
 	enforceBorders();
 	keyPressed();
 	runTorp();
+	detectCollision();
+	detectDeath();
+
+
+
+	
 	followCamera(roster[0].obj);
 
-	camera.off();
+	push()
+	//Mimic p5.play's normal camera functionality
+	translate(-camera.x + width/2, -camera.y + height/2)
+	//Draw all sprites with the offset
+	allSprites.draw()
+	pop()
+	//Draw UI without the offset
 	uiHandler(roster[0].obj);
 
-	camera.on();
 }
