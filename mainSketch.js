@@ -67,10 +67,20 @@ function setup() {
 	bulletObjs = new interactables.Group();
 
 	asteroidNodes = new interactables.Group();
+	asteroidNodes.color = "grey";
 	asteroidNodes.health = 15
+	asteroidNodes.value = 10
 	asteroidNodes.diameter = 10;
 	asteroidNodes.collider = "d";
-	genAsteroid(0,0)
+
+	asteroidValNodes = new interactables.Group();
+	asteroidValNodes.color = "red";
+	asteroidValNodes.health = 15
+	asteroidValNodes.value = 30
+	asteroidValNodes.diameter = 10;
+	asteroidValNodes.collider = "d";
+	
+	genAsteroid(0, 0, 50, 5)
 
 	//setup healthbars to show health (controlled in check health loop) <abandoned>
 	// healthBarA = new Sprite();
@@ -129,20 +139,21 @@ function addPlayerShip() {
 	roster[player.playerID] = player;
 }
 
-function genAsteroid(xVal, yVal)
+function genAsteroid(xVal, yVal, standard, valNodes)
 {
 	//create contoller object
 	let maxDist = 20
 	asteroid = {}
 	asteroid.nodes = []
-	asteroid.normal = 50
-	asteroid.valuable = 0
+	asteroid.normal = standard
+	asteroid.valuable = valNodes
 	asteroid.size = asteroid.normal + asteroid.valuable
 	asteroid.centerMass = 
 	{
 		x: xVal,
 		y: yVal
 	}
+	//creates normal nodes
 	for (i=0; i<asteroid.normal; i++)
 	{
 		let xNode = getRandomNumber(-maxDist, maxDist) + asteroid.centerMass.x
@@ -150,8 +161,14 @@ function genAsteroid(xVal, yVal)
 		asteroidNode = new asteroidNodes.Sprite(xNode, yNode)
 		asteroid.nodes.push(asteroidNode)
 	}
-
-
+	//creates valuable nodes
+	for (i=0; i<asteroid.valuable; i++)
+	{
+		let xNode = getRandomNumber(-maxDist, maxDist) + asteroid.centerMass.x
+		let yNode = getRandomNumber(-maxDist, maxDist) + asteroid.centerMass.y
+		asteroidNode = new asteroidValNodes.Sprite(xNode, yNode)
+		asteroid.nodes.push(asteroidNode)
+	}
 	//inject controller obj into array at first availible position
     let success = false;
     for (let i in asteroids) {
@@ -404,7 +421,7 @@ function runTorp() {
 			torpedos[i].obj.moveTo(torpedos[i].target.x, torpedos[i].target.y, 6);
 		} else {
 			console.log();
-			torpedos[i].obj.remove();
+			
 			clearTimeout(torpedos[i].lifespan);
 			torpedos.splice(i);
 		}
@@ -413,13 +430,13 @@ function runTorp() {
 
 function launchTorp(playerID, target) {
 	console.log("torplaunchtriggered");
-	let torpedoAvalibility = true;
-	for (i = 0; i < torpedos.length; i++) {
-		if (torpedos[i].owner == playerID) {
-			torpedoAvalibility = false;
-		}
-	}
-	if (target != null && torpedoAvalibility) {
+	// let torpedoAvalibility = true;
+	// for (i = 0; i < torpedos.length; i++) {
+	// 	if (torpedos[i].owner == playerID) {
+	// 		torpedoAvalibility = false;
+	// 	}
+	//}
+	if (target != null ) {        //&& torpedoAvalibility
 		console.log("target valid");
 
 		let torpOriginVector = calculateBearingLineEnd(
