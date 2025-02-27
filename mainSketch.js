@@ -67,7 +67,7 @@ function setup() {
 	bulletObjs = new interactables.Group();
 
 	asteroidNodes = new interactables.Group();
-	asteroidNodes.health = 5
+	asteroidNodes.health = 15
 	asteroidNodes.diameter = 10;
 	asteroidNodes.collider = "d";
 	genAsteroid(0,0)
@@ -135,7 +135,7 @@ function genAsteroid(xVal, yVal)
 	let maxDist = 20
 	asteroid = {}
 	asteroid.nodes = []
-	asteroid.normal = 10
+	asteroid.normal = 50
 	asteroid.valuable = 0
 	asteroid.size = asteroid.normal + asteroid.valuable
 	asteroid.centerMass = 
@@ -148,28 +148,57 @@ function genAsteroid(xVal, yVal)
 		let xNode = getRandomNumber(-maxDist, maxDist) + asteroid.centerMass.x
 		let yNode = getRandomNumber(-maxDist, maxDist) + asteroid.centerMass.y
 		asteroidNode = new asteroidNodes.Sprite(xNode, yNode)
-		asteroid.nodes = push(asteroidNode)
+		asteroid.nodes.push(asteroidNode)
 	}
 
 
 	//inject controller obj into array at first availible position
-	let success = false
-	for (i in asteroids)
-	{
-		if ((!asteroids[i]) && (!success))
-		{
-			asteroids[i] = asteroid
-			success = true
+    let success = false;
+    for (let i in asteroids) {
+        if ((!asteroids[i]) && (!success)) {
+            asteroids[i] = asteroid;
+            success = true;
+        }
+    }
 
-		}
-	}
+    // If no empty slot was found, push the new asteroid to the array
+    if (!success) {
+        asteroids.push(asteroid);
+    }
 
-
+    console.log("Asteroid generated:", asteroid);
 }
+
 
 function updateAsteroids()
 {
-	/// make astwoid stay together
+	for (i=0; i<asteroids.length; i++)
+	{
+		/// make asteroid stay together
+		
+		// find the center of all its nodes
+		let xTotal = 0
+		let yTotal = 0
+		// sum all x and y values
+		for (j=0; j<asteroids[i].nodes.length; j++)
+		{
+			xTotal += asteroids[i].nodes[j].x
+			yTotal += asteroids[i].nodes[j].y
+		}
+		// find the average
+		let xCenter = xTotal/asteroids[i].nodes.length
+		let yCenter = yTotal/asteroids[i].nodes.length
+		//adjust the asteroid's center of mass
+		asteroids[i].centerMass.x = xCenter
+		asteroids[i].centerMass.y = yCenter
+		// move all nodes towards the center
+		for (j=0; j<asteroids[i].nodes.length; j++)
+		{
+			asteroids[i].nodes[j].attractTo(asteroids[i].centerMass.x, asteroids[i].centerMass.y, 0.1)
+		}
+
+
+	}
 }
 
 function detectCollision() {
@@ -192,6 +221,21 @@ function detectCollision() {
                         j.remove();
                         i.value += j.value;
                     } 
+
+					// check if i is in the same asteroid as j
+					else if (asteroidNodes.contains(i) && asteroidNodes.contains(j)) {
+						// if i and j are both in the same asteroid, they are merged
+						// find the asteroid that both i and j are in
+						let asteroid = null;
+						for (let a of asteroids) {
+							if (a.nodes.includes(i) && a.nodes.includes(j)) {
+								asteroid = a;
+								break;
+							}
+						}
+						// dont damage the asteroid
+					}
+
 					else {
                         // kinetic damage is applied to both objects
                         kineticDamage(i, j);
@@ -922,8 +966,7 @@ function draw() {
 	runTorp();
 	detectCollision();
 	detectDeath();
-
-
+	updateAsteroids()
 
 	
 	followCamera(roster[0].obj);
