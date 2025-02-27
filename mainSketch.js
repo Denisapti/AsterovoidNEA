@@ -224,7 +224,7 @@ function detectCollision() {
 
 					// check if i is in the same asteroid as j
 					else if (asteroidNodes.contains(i) && asteroidNodes.contains(j)) {
-						// if i and j are both in the same asteroid, they are merged
+						// if i and j are both in the same asteroid, dont damage them
 						// find the asteroid that both i and j are in
 						let asteroid = null;
 						for (let a of asteroids) {
