@@ -144,6 +144,12 @@ function addPlayerShip() {
 	player.obj.maxHealth = 100
 	player.obj.value = 0
 	player.obj.durability = 100
+
+player.abilities = ["torpedo", "gun"];
+	player.abilityState = 0;
+	
+	player.abilities = ["torpedo", "gun"];
+	player.abilityState = 0;
 	
 	player.abilities = ["torpedo", "gun"];
 	player.abilityState = 0;
@@ -263,6 +269,10 @@ function updateAsteroids()
         //adjust the asteroid's center of mass
         asteroids[i].centerMass.x = xCenter
         asteroids[i].centerMass.y = yCenter
+		//log the center of mass
+		console.log("Center of mass: x:"+xCenter+" y:"+yCenter)
+
+
         // move all nodes towards the center
         for (j=0; j<asteroids[i].nodes.length; j++)
         {
@@ -307,8 +317,8 @@ function maintainAsteroids()
 	if (asteroidCount < expectedAsteroids)
 	{
 		//find a random location
-		let xVal = getRandomNumber(-worldRadius, worldRadius)
-		let yVal = getRandomNumber(-worldRadius, worldRadius)
+		let xVal = getRandomNumber(-worldRadius + 100, worldRadius -100)
+		let yVal = getRandomNumber(-worldRadius + 100, worldRadius -100)
 		//find a random size
 		let standard = getRandomNumber(15, 45)
 		let valNodes = getRandomNumber(1, 5)
@@ -319,13 +329,19 @@ function maintainAsteroids()
 	updateAsteroids()
 }
 
-function detectCollision() {
-    //detects collisions between all objects in interactables
-    for (let i of interactables) {
-        for (let j of interactables) {
-            if (i != j) {
-                if (i.collides(j)) 
+function detectCollision() 
+	{
+    	//detects collisions between all objects in interactables
+    	for (let i of interactables) 
+		{
+        	for (let j of interactables) 
+			{
+            	if (i != j) 
+				{
+					if (i.collides(j)) 
 					{
+						
+						let shouldDmg = true;
 						//collision detected
 						// console.log("collision detected")
 
@@ -354,34 +370,36 @@ function detectCollision() {
 								{
 									//if the node is in an asteroid, mine it
 									mine(i, j)
+									shouldDmg = false
 								}
 								else if (a.nodes.includes(j))
 								{
 									//if the node is in an asteroid, mine it
 									mine(j, i)
+									shouldDmg = false
 								}
 							}
 							
 						}
+						
 						// check if i is in the same asteroid as j
-						let sameAsteroid = false;
 						if (asteroidNodes.contains(i) && asteroidNodes.contains(j)) 
-							{
-								// if i and j are both in the same asteroid, dont damage them
-								// find the asteroid that both i and j are in
-								
-								for (let a of asteroids) 
-									{
-										if (a.nodes.includes(i) && a.nodes.includes(j)) 
-											{
-												//console.log("same asteroid")
-												sameAsteroid = true;
-												break;
-										}
+						{
+							// if i and j are both in the same asteroid, dont damage them
+							// find the asteroid that both i and j are in
+							
+							for (let a of asteroids) 
+								{
+									if (a.nodes.includes(i) && a.nodes.includes(j)) 
+										{
+											//console.log("same asteroid")
+											shouldDmg = false;
+											break;
 									}
-								// dont damage the asteroid
-							}
-						if (!sameAsteroid)
+								}
+							// dont damage the asteroid
+						}
+						if (shouldDmg)
 						{
 							// kinetic damage is applied to both objects
 							kineticDamage(i, j);
@@ -394,21 +412,48 @@ function detectCollision() {
     }
 
 
-function kineticDamage(obj1, obj2) {
-
+function kineticDamage(obj1, obj2) 
+{
 
 	// find the relative speed of the two objects
 	let relativeSpeed = p5.Vector.sub(obj1.vel, obj2.vel).mag();
+
+    // Log the relative speed and durability values
+    console.log(`Relative Speed: ${relativeSpeed}`);
+    console.log(`Obj1 Durability: ${obj1.durability}, Obj2 Durability: ${obj2.durability}`);
+
+    // Ensure relativeSpeed is a valid number
+    if (isNaN(relativeSpeed)) {
+        console.error("Relative speed is NaN");
+        return;
+    }
+
+    // Ensure durability values are valid numbers
+    if (isNaN(obj1.durability) || isNaN(obj2.durability)) {
+        console.error("Durability is NaN");
+        return;
+    }
 	
 	// find damage for obj1
-	let dmg1 = relativeSpeed * (obj2.durability/obj1.durability)
+	let dmg1 = relativeSpeed * (obj2.durability / obj1.durability);
 	// find damage for obj2
-	let dmg2 = relativeSpeed * (obj1.durability/obj2.durability)
+	let dmg2 = relativeSpeed * (obj1.durability / obj2.durability);
+
+    // Log the calculated damage values
+    console.log(`Damage to Obj1: ${dmg1}, Damage to Obj2: ${dmg2}`);
+
+    // Ensure damage values are valid numbers
+    if (isNaN(dmg1) || isNaN(dmg2)) {
+        console.error("Damage is NaN");
+        return;
+    }
 
 	// apply damage to objs
-	console.log(dmg1, dmg2)
-	obj1.health -= dmg1
-	obj2.health -= dmg2
+		obj1.health -= dmg1;
+	obj2.health -= dmg2;
+
+    // Log the new health values
+    console.log(`Obj1 Health: ${obj1.health}, Obj2 Health: ${obj2.health}`);
 }
 
 function detectDeath() {
@@ -448,6 +493,7 @@ function followCamera(target)
 
 	camera.x = target.x + target.vel.x * -3; // follows with a delay based on
 	camera.y = target.y + target.vel.y * -3; // the target's velocity
+	
 }
 
 // function updateInteractables(){<abandoned solution>
@@ -456,9 +502,11 @@ function followCamera(target)
 // 		interactables.add(roster[i].obj)
 // 	}
 
+
 // 	for (let i in asteroidNodes){
 // 		interactables.add(asteroidNodes[i])
 // 	}
+
 
 // 	for (let i in torpedos){
 // 		interactables.add(torpedos[i].obj)
@@ -473,14 +521,14 @@ function enforceBorders() {
 			//assess zoneing
 			if (objectRadius < bufferRadius) {
 				//mirror the object
-				mirrorObject(i);
+				//mirrorObject(i);
 			} else {
 				//teleport the object
 				crossBorder(i);
-				endMirror(i); // remove mirrored slave
+				//endMirror(i); // remove mirrored slave
 			}
 		} else {
-			endMirror(i);
+			//endMirror(i);
 		}
 	}
 }
@@ -896,7 +944,7 @@ function ctrl(playerID) {
 		}
 		if (contros[playerID].leftStick.y > 0.2) {
 			roster[playerID].obj.bearing = roster[playerID].obj.rotation + 180;
-			roster[playerID].obj.applyForce(2 * contros[playerID].leftStick.y);
+			roster[playerID].obj.applyForce(6 * contros[playerID].leftStick.y);
 		}
 		if (contros[playerID].leftStick.x > 0.2) {
 			roster[playerID].obj.bearing = roster[playerID].obj.rotation + 90;
@@ -1005,8 +1053,20 @@ function uiHandler(user)
 
 	healthIndicator(user)
 	miniMap(user);
-	
+	debugStats(user)
 }
+
+function debugStats(user)
+{
+	//debug stats
+	push()
+	fill(255)
+	text("Health: " + user.health, 10, 10)
+	text("Value: " + user.value, 10, 20)
+	//text("Durability: " + user.durability, 10, 30)
+	pop()
+}
+
 
 function healthIndicator(user)
 {
