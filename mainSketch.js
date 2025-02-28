@@ -303,14 +303,14 @@ function maintainAsteroids()
 		}
 	}
 	//if asteroid count is below expected, spawn a new asteroid
-	expectedAsteroids = 15
+	expectedAsteroids = 10
 	if (asteroidCount < expectedAsteroids)
 	{
 		//find a random location
 		let xVal = getRandomNumber(-worldRadius, worldRadius)
 		let yVal = getRandomNumber(-worldRadius, worldRadius)
 		//find a random size
-		let standard = getRandomNumber(15, 30)
+		let standard = getRandomNumber(15, 45)
 		let valNodes = getRandomNumber(1, 5)
 		//generate the asteroid
 		genAsteroid(xVal, yVal, standard, valNodes)
@@ -586,7 +586,7 @@ function launchTorp(playerID, target) {
 
 		torp.target = target;
 		torp.status = false;
-		torp.obj.health = 10
+		torp.obj.health = 2
 		torp.obj.durability = 50
 		torp.lifespan = setTimeout(function () {
 			torp.obj.remove();
@@ -1123,7 +1123,7 @@ function draw() {
 	detectCollision();
 	detectDeath();
 	maintainAsteroids()
-	//drillCollection()
+	drillCollection()
 
 	
 	followCamera(roster[0].obj);
