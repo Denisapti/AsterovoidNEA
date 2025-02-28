@@ -61,14 +61,14 @@ function setup() {
 	players.textSize = 15;
 	players.text = "([]}--";
 
-	addPlayerShip();
+	
 
 	torpedosObjs = new interactables.Group();
 	bulletObjs = new interactables.Group();
 
 	asteroidNodes = new interactables.Group();
 	asteroidNodes.color = "grey";
-	asteroidNodes.health = 15
+	asteroidNodes.health = 10 
 	asteroidNodes.value = 10
 	asteroidNodes.diameter = 10;
 	asteroidNodes.collider = "d";
@@ -80,7 +80,15 @@ function setup() {
 	asteroidValNodes.diameter = 10;
 	asteroidValNodes.collider = "d";
 	
-	genAsteroid(0, 0, 50, 5)
+	drills = new interactables.Group();
+	drills.color = "grey";
+	drills.health = 250
+	drills.value = 20
+	drills.durability = 150
+	drills.mass = 1
+	
+	
+	addPlayerShip();
 
 	//setup healthbars to show health (controlled in check health loop) <abandoned>
 	// healthBarA = new Sprite();
@@ -134,15 +142,60 @@ function addPlayerShip() {
 	player.obj.offset.x = 15;
 	player.obj.health = 100
 	player.obj.maxHealth = 100
+	player.obj.value = 0
+	player.obj.durability = 100
+	
 	player.abilities = ["torpedo", "gun"];
 	player.abilityState = 0;
+	
 	roster[player.playerID] = player;
+
+	//create and attach a drill to the player
+	drill = new drills.Sprite((player.obj.x + (player.obj.width/2) +30), player.obj.y, 
+		[
+			[35, 10],
+			[-35, 10],
+			[0, -20],
+		]
+	)
+	//attach drill to player via glue joint
+	new GlueJoint(player.obj, drill)
+	drill.playerID = player.playerID
+
+
+}
+
+function mine(node, drill)
+{
+	//mine a node
+	//find the asteroid that the node is in
+	for (let a of asteroids)
+	{
+		if (a.nodes.includes(node))
+		{
+			//damage the node
+			node.health -= drill.durability
+		}
+	}
+}
+
+function drillCollection()
+{
+	//for each drill, move 1 value from it to its player if it has any
+	for (let d of drills)
+	{
+		if (d.value > 0)
+		{
+			roster[d.playerID].obj.value += 1
+			d.value -= 1
+		}
+	}
 }
 
 function genAsteroid(xVal, yVal, standard, valNodes)
 {
 	//create contoller object
-	let maxDist = 20
+	let maxDist = 45
 	asteroid = {}
 	asteroid.nodes = []
 	asteroid.normal = standard
@@ -159,6 +212,7 @@ function genAsteroid(xVal, yVal, standard, valNodes)
 		let xNode = getRandomNumber(-maxDist, maxDist) + asteroid.centerMass.x
 		let yNode = getRandomNumber(-maxDist, maxDist) + asteroid.centerMass.y
 		asteroidNode = new asteroidNodes.Sprite(xNode, yNode)
+		asteroidNode.durability = 15
 		asteroid.nodes.push(asteroidNode)
 	}
 	//creates valuable nodes
@@ -167,6 +221,7 @@ function genAsteroid(xVal, yVal, standard, valNodes)
 		let xNode = getRandomNumber(-maxDist, maxDist) + asteroid.centerMass.x
 		let yNode = getRandomNumber(-maxDist, maxDist) + asteroid.centerMass.y
 		asteroidNode = new asteroidValNodes.Sprite(xNode, yNode)
+		asteroidNode.durability = 25
 		asteroid.nodes.push(asteroidNode)
 	}
 	//inject controller obj into array at first availible position
@@ -183,49 +238,85 @@ function genAsteroid(xVal, yVal, standard, valNodes)
         asteroids.push(asteroid);
     }
 
-    console.log("Asteroid generated:", asteroid);
+    console.log("Asteroid generated:" + asteroid);
 }
 
 
 function updateAsteroids()
 {
-	for (i=0; i<asteroids.length; i++)
-	{
-		/// make asteroid stay together
-		
-		// find the center of all its nodes
-		let xTotal = 0
-		let yTotal = 0
-		// sum all x and y values
-		for (j=0; j<asteroids[i].nodes.length; j++)
-		{
-			xTotal += asteroids[i].nodes[j].x
-			yTotal += asteroids[i].nodes[j].y
-		}
-		// find the average
-		let xCenter = xTotal/asteroids[i].nodes.length
-		let yCenter = yTotal/asteroids[i].nodes.length
-		//adjust the asteroid's center of mass
-		asteroids[i].centerMass.x = xCenter
-		asteroids[i].centerMass.y = yCenter
-		// move all nodes towards the center
-		for (j=0; j<asteroids[i].nodes.length; j++)
-		{
+    for (i=0; i<asteroids.length; i++)
+    {
+        /// make asteroid stay together
+        
+        // find the center of all its nodes
+        let xTotal = 0
+        let yTotal = 0
+        // sum all x and y values
+        for (j=0; j<asteroids[i].nodes.length; j++)
+        {
+            xTotal += asteroids[i].nodes[j].x
+            yTotal += asteroids[i].nodes[j].y
+        }
+        // find the average
+        let xCenter = xTotal/asteroids[i].nodes.length
+        let yCenter = yTotal/asteroids[i].nodes.length
+        //adjust the asteroid's center of mass
+        asteroids[i].centerMass.x = xCenter
+        asteroids[i].centerMass.y = yCenter
+        // move all nodes towards the center
+        for (j=0; j<asteroids[i].nodes.length; j++)
+        {
 			// move the node towards the center of mass
 			//only if node isnt dead
-			if ((asteroids[i].nodes[j] == null) || (asteroids[i].nodes[j] == undefined))
-			{
-				console.log("moving node")
-				asteroids[i].nodes[j].attractTo(asteroids[i].centerMass.x, asteroids[i].centerMass.y, 0.1)
-			}
-			else 
-			{
-				console.log("node dead")
-			}
+			if ((asteroids[i].nodes[j] != null) && (asteroids[i].nodes[j] != undefined))
+				{
+					console.log("moving node")
+					asteroids[i].nodes[j].attractTo(asteroids[i].centerMass.x, asteroids[i].centerMass.y, 0.1)
+				}
+
+
+        }
+
+
+    }
+}
+
+function maintainAsteroids()
+{
+	//removes asteroids with no nodes
+	for (i=0; i<asteroids.length; i++)
+	{
+		if (asteroids[i].nodes.length == 0)
+		{
+			asteroids[i] = null
+			console.log("Asteroid No:"+i+" removed")
 		}
-
-
 	}
+	
+	//count asteroids
+	let asteroidCount = 0
+	for (i=0; i<asteroids.length; i++)
+	{
+		if (asteroids[i] != null)
+		{
+			asteroidCount += 1
+		}
+	}
+	//if asteroid count is below expected, spawn a new asteroid
+	expectedAsteroids = 15
+	if (asteroidCount < expectedAsteroids)
+	{
+		//find a random location
+		let xVal = getRandomNumber(-worldRadius, worldRadius)
+		let yVal = getRandomNumber(-worldRadius, worldRadius)
+		//find a random size
+		let standard = getRandomNumber(15, 30)
+		let valNodes = getRandomNumber(1, 5)
+		//generate the asteroid
+		genAsteroid(xVal, yVal, standard, valNodes)
+	}
+
+	updateAsteroids()
 }
 
 function detectCollision() {
@@ -233,63 +324,96 @@ function detectCollision() {
     for (let i of interactables) {
         for (let j of interactables) {
             if (i != j) {
-                if (i.collides(j)) {
-                    //collision detected
-                    // console.log("collision detected")
+                if (i.collides(j)) 
+					{
+						//collision detected
+						// console.log("collision detected")
 
-                    // check if i is in valuables group
-                    if (valuables.contains(i)) {
-                        // if i is a valuable, it is collected
-                        i.remove();
-                        j.value += i.value;
-                    } 
-					else if (valuables.contains(j)) {
-                        // if j is a valuable, it is collected
-                        j.remove();
-                        i.value += j.value;
-                    } 
+						// check if i is in valuables group
+						if (valuables.contains(i)) 
+						{
+							// if i is a valuable, it is collected
+							i.remove();
+							j.value += i.value;
+						} 
+						else if (valuables.contains(j)) 
+						{
+							// if j is a valuable, it is collected
+							j.remove();
+							i.value += j.value;
+						} 
 
-					// check if i is in the same asteroid as j
-					else if (asteroidNodes.contains(i) && asteroidNodes.contains(j)) {
-						// if i and j are both in the same asteroid, dont damage them
-						// find the asteroid that both i and j are in
-						let asteroid = null;
-						for (let a of asteroids) {
-							if (a.nodes.includes(i) && a.nodes.includes(j)) {
-								asteroid = a;
-								break;
+					
+						//check if i or j are a drill
+						if (drills.contains(i) || drills.contains(j))
+						{
+							//check if i or j are a an asteroid node in any asteroid
+							for (let a of asteroids)
+							{
+								if (a.nodes.includes(i) )
+								{
+									//if the node is in an asteroid, mine it
+									mine(i, j)
+								}
+								else if (a.nodes.includes(j))
+								{
+									//if the node is in an asteroid, mine it
+									mine(j, i)
+								}
 							}
+							
 						}
-						// dont damage the asteroid
+						// check if i is in the same asteroid as j
+						let sameAsteroid = false;
+						if (asteroidNodes.contains(i) && asteroidNodes.contains(j)) 
+							{
+								// if i and j are both in the same asteroid, dont damage them
+								// find the asteroid that both i and j are in
+								
+								for (let a of asteroids) 
+									{
+										if (a.nodes.includes(i) && a.nodes.includes(j)) 
+											{
+												//console.log("same asteroid")
+												sameAsteroid = true;
+												break;
+										}
+									}
+								// dont damage the asteroid
+							}
+						if (!sameAsteroid)
+						{
+							// kinetic damage is applied to both objects
+							kineticDamage(i, j);
+						}
 					}
 
-					else {
-                        // kinetic damage is applied to both objects
-                        kineticDamage(i, j);
-                    }
                 }
             }
         }
     }
-}
+
 
 function kineticDamage(obj1, obj2) {
+
+
 	// find the relative speed of the two objects
 	let relativeSpeed = p5.Vector.sub(obj1.vel, obj2.vel).mag();
 	
 	// find damage for obj1
-	let dmg1 = relativeSpeed * (obj2.mass/obj1.mass)
+	let dmg1 = relativeSpeed * (obj2.durability/obj1.durability)
 	// find damage for obj2
-	let dmg2 = relativeSpeed * (obj1.mass/obj2.mass)
+	let dmg2 = relativeSpeed * (obj1.durability/obj2.durability)
 
 	// apply damage to objs
-
+	console.log(dmg1, dmg2)
 	obj1.health -= dmg1
 	obj2.health -= dmg2
 }
 
 function detectDeath() {
 	//detects if any object has health below 0
+	
 	for (let i of interactables) {
 		if (i.health <= 0) {
 			if (players.contains(i))
@@ -297,7 +421,7 @@ function detectDeath() {
 				alert("you died")
 
 			}
-
+			console.log("detecting death")
 			killObj(i);
 		}
 	}
@@ -305,15 +429,18 @@ function detectDeath() {
 
 
 function killObj(obj) {
+	console.log("killing object")
 	// spawns a valuable where the object was
 	let valuable = new valuables.Sprite(obj.x, obj.y);
 	// valueables inherit the value of the object
 	valuable.value = obj.value	
-
+	console.log("valuable spawned")
 
 
 	//removes object from interactables
 	obj.remove();
+	obj = null
+	console.log("object removed")
 }
 
 function followCamera(target) 
@@ -460,6 +587,7 @@ function launchTorp(playerID, target) {
 		torp.target = target;
 		torp.status = false;
 		torp.obj.health = 10
+		torp.obj.durability = 50
 		torp.lifespan = setTimeout(function () {
 			torp.obj.remove();
 			torp = null;
@@ -504,6 +632,7 @@ function fireGun(playerID, bearing, power) {
 	bullet.obj.bearing = bearing;
 	bullet.health = 10
 	bullet.obj.applyForce(0.5 * power);
+	bullet.obj.durability = 50
 
 	bullet.status = false;
 	bullet.lifespan = setTimeout(function () {
@@ -993,7 +1122,8 @@ function draw() {
 	runTorp();
 	detectCollision();
 	detectDeath();
-	updateAsteroids()
+	maintainAsteroids()
+	//drillCollection()
 
 	
 	followCamera(roster[0].obj);
