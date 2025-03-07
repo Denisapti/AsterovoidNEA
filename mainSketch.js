@@ -1099,8 +1099,8 @@ function debugStats(user)
 	fill(255)
 	text("Health: " + user.health, 10, 10)
 	text("Value: " + user.value, 10, 20)
-	//text("Durability: " + user.durability, 10, 30)
-	pop()
+	
+	pop() 
 }
 
 
@@ -1154,12 +1154,14 @@ function miniMap(user) {
 	stroke("white");
 	fill("white");
 
+
 	if (findRadius(vectorTo.x, vectorTo.y) < playerHorizon) {
 		ellipse(
 			mini.x + (vectorTo.x / playerHorizon) * 75,
 			mini.y + (vectorTo.y / playerHorizon) * 75,
 			10,
 			10
+			
 		);
 	} else {
 		let angle = findBearing(vectorTo.x, vectorTo.y);
@@ -1167,12 +1169,15 @@ function miniMap(user) {
 			pointerEnd = calculateBearingLineEnd(
 				angle,
 				75 + (dist / bufferRadius) * 25
+
+
 			);
 		line(
 			mini.x + pointerStart.x,
 			mini.y + pointerStart.y,
 			mini.x + pointerEnd.x,
 			mini.y + pointerEnd.y
+
 		);
 	}
 	push();
