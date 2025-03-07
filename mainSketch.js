@@ -72,6 +72,7 @@ function setup() {
 	asteroidNodes.value = 10
 	asteroidNodes.diameter = 10;
 	asteroidNodes.collider = "d";
+	asteroidNodes.bounciness = 0
 
 	asteroidValNodes = new interactables.Group();
 	asteroidValNodes.color = "red";
@@ -79,6 +80,7 @@ function setup() {
 	asteroidValNodes.value = 30
 	asteroidValNodes.diameter = 10;
 	asteroidValNodes.collider = "d";
+	asteroidValNodes.bounciness = 0
 	
 	drills = new interactables.Group();
 	drills.color = "grey";
@@ -144,6 +146,7 @@ function addPlayerShip() {
 	player.obj.maxHealth = 100
 	player.obj.value = 0
 	player.obj.durability = 100
+	
 
 player.abilities = ["torpedo", "gun"];
 	player.abilityState = 0;
@@ -167,6 +170,8 @@ player.abilities = ["torpedo", "gun"];
 	//attach drill to player via glue joint
 	new GlueJoint(player.obj, drill)
 	drill.playerID = player.playerID
+	drill.mass = 0
+
 
 
 }
@@ -204,7 +209,7 @@ function genAsteroid(xVal, yVal, standard, valNodes)
 	let maxDist = 45
 	asteroid = {}
 	asteroid.nodes = []
-	asteroid.normal = standard
+	asteroid.normal = standard //normal node count passed in is assigned to the normal node count of the asteroid
 	asteroid.valuable = valNodes
 	asteroid.size = asteroid.normal + asteroid.valuable
 	asteroid.centerMass = 
@@ -237,6 +242,7 @@ function genAsteroid(xVal, yVal, standard, valNodes)
             asteroids[i] = asteroid;
             success = true;
         }
+
     }
 
     // If no empty slot was found, push the new asteroid to the array
@@ -257,15 +263,22 @@ function updateAsteroids()
         // find the center of all its nodes
         let xTotal = 0
         let yTotal = 0
+		// number of live nodes 
+		numNodes = 0
         // sum all x and y values
         for (j=0; j<asteroids[i].nodes.length; j++)
         {
-            xTotal += asteroids[i].nodes[j].x
-            yTotal += asteroids[i].nodes[j].y
-        }
+			if (asteroids[i].nodes[j].body != null)
+			{
+				xTotal += asteroids[i].nodes[j].x
+				yTotal += asteroids[i].nodes[j].y
+				numNodes++
+			}
+		}
+		
         // find the average
-        let xCenter = xTotal/asteroids[i].nodes.length
-        let yCenter = yTotal/asteroids[i].nodes.length
+        let xCenter = xTotal/numNodes
+        let yCenter = yTotal/numNodes
         //adjust the asteroid's center of mass
         asteroids[i].centerMass.x = xCenter
         asteroids[i].centerMass.y = yCenter
@@ -278,7 +291,7 @@ function updateAsteroids()
         {
 			// move the node towards the center of mass
 			//only if node isnt dead
-			if ((asteroids[i].nodes[j] != null) && (asteroids[i].nodes[j] != undefined))
+			if ((asteroids[i].nodes[j].body != null) )
 				{
 					console.log("moving node")
 					asteroids[i].nodes[j].attractTo(asteroids[i].centerMass.x, asteroids[i].centerMass.y, 0.1)
@@ -317,8 +330,8 @@ function maintainAsteroids()
 	if (asteroidCount < expectedAsteroids)
 	{
 		//find a random location
-		let xVal = getRandomNumber(-worldRadius + 100, worldRadius -100)
-		let yVal = getRandomNumber(-worldRadius + 100, worldRadius -100)
+		let xVal = getRandomNumber(-worldRadius + 200, worldRadius -200)
+		let yVal = getRandomNumber(-worldRadius + 200, worldRadius -200)
 		//find a random size
 		let standard = getRandomNumber(15, 45)
 		let valNodes = getRandomNumber(1, 5)
@@ -392,7 +405,7 @@ function detectCollision()
 								{
 									if (a.nodes.includes(i) && a.nodes.includes(j)) 
 										{
-											//console.log("same asteroid")
+											console.log("same asteroid")
 											shouldDmg = false;
 											break;
 									}
@@ -449,7 +462,7 @@ function kineticDamage(obj1, obj2)
     }
 
 	// apply damage to objs
-		obj1.health -= dmg1;
+	obj1.health -= dmg1;
 	obj2.health -= dmg2;
 
     // Log the new health values
@@ -484,13 +497,13 @@ function killObj(obj) {
 
 	//removes object from interactables
 	obj.remove();
-	obj = null
+	console.log(obj)
 	console.log("object removed")
 }
 
 function followCamera(target) 
 {
-
+	// camera.zoom
 	camera.x = target.x + target.vel.x * -3; // follows with a delay based on
 	camera.y = target.y + target.vel.y * -3; // the target's velocity
 	
@@ -523,8 +536,29 @@ function enforceBorders() {
 				//mirror the object
 				//mirrorObject(i);
 			} else {
-				//teleport the object
-				crossBorder(i);
+
+				//if its part of an asteroid
+				if ((!asteroidNodes.includes(i)) && (!asteroidValNodes.includes(i)))
+				{
+					//teleport the object
+					crossBorder(i);
+				}
+				else
+				{
+					// check the asteroids crossing the border
+					for (j of asteroids)
+					{
+						let jRad = findRadius(j.centerMass.x, j.centerMass.y)
+						if (jRad < bufferRadius)
+						{
+							for (k of j.nodes)
+							{
+								crossBorder(k)
+							}
+						}
+					}
+				}
+				
 				//endMirror(i); // remove mirrored slave
 			}
 		} else {
@@ -534,6 +568,8 @@ function enforceBorders() {
 }
 
 function crossBorder(obj) {
+
+
 	obj.x *= -1; //teleports an object to the opposite end of the map
 	obj.y *= -1;
 }
@@ -595,7 +631,7 @@ function runTorp() {
 			torpedos[i].obj.rotateTowards(torpedos[i].target, 0.1, 0);
 			torpedos[i].obj.moveTo(torpedos[i].target.x, torpedos[i].target.y, 6);
 		} else {
-			console.log();
+			
 			
 			clearTimeout(torpedos[i].lifespan);
 			torpedos.splice(i);
@@ -1091,7 +1127,7 @@ function healthIndicator(user)
 
 	//draw arc
 	stroke(255,0,0)
-	fill(255,0,0,150)
+	fill(255,0,0,0)
 	arc((width/2)-(location.x), (height/2)-(location.y), 100, 100, startAngle, endAngle)
 	pop()
 
