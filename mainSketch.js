@@ -163,9 +163,6 @@ function addPlayerShip() {
 	new GlueJoint(player.obj, drill)
 	drill.playerID = player.playerID
 	drill.mass = 0
-
-
-
 }
 
 function mine(node, drill)
