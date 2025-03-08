@@ -295,11 +295,7 @@ function updateAsteroids()
 					console.log("moving node")
 					asteroids[i].nodes[j].attractTo(asteroids[i].centerMass.x, asteroids[i].centerMass.y, 0.1)
 				}
-
-
         }
-
-
     }
 }
 
