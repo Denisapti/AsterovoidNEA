@@ -146,14 +146,6 @@ function addPlayerShip() {
 	player.obj.maxHealth = 100
 	player.obj.value = 0
 	player.obj.durability = 100
-	
-
-player.abilities = ["torpedo", "gun"];
-	player.abilityState = 0;
-	
-	player.abilities = ["torpedo", "gun"];
-	player.abilityState = 0;
-	
 	player.abilities = ["torpedo", "gun"];
 	player.abilityState = 0;
 	
