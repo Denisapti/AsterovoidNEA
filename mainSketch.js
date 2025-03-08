@@ -169,8 +169,8 @@ function mine(node, drill)
 {
 	//mine a node
 	//find the asteroid that the node is in
-	for (let a of asteroids)
-	{
+	for (let a of asteroids)//this validation might be 
+	{       //unneccessary I will look into removing it
 		if (a.nodes.includes(node))
 		{
 			//damage the node
