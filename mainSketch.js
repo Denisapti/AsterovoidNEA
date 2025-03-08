@@ -229,8 +229,8 @@ function genAsteroid(xVal, yVal, standard, valNodes)
 	//creates valuable nodes
 	for (i=0; i<asteroid.valuable; i++)
 	{
-		let xNode = getRandomNumber(-maxDist, maxDist) + asteroid.centerMass.x
-		let yNode = getRandomNumber(-maxDist, maxDist) + asteroid.centerMass.y
+		let xNode = getRandomNumber(-maxDist + 20, maxDist - 20) + asteroid.centerMass.x
+		let yNode = getRandomNumber(-maxDist + 20, maxDist - 20) + asteroid.centerMass.y
 		asteroidNode = new asteroidValNodes.Sprite(xNode, yNode)
 		asteroidNode.durability = 25
 		asteroid.nodes.push(asteroidNode)
@@ -477,6 +477,7 @@ function detectDeath() {
 			if (players.contains(i))
 			{
 				alert("you died")
+				
 
 			}
 			console.log("detecting death")
