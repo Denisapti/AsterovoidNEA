@@ -259,12 +259,11 @@ function updateAsteroids()
     for (i=0; i<asteroids.length; i++)
     {
         /// make asteroid stay together
-        
         // find the center of all its nodes
         let xTotal = 0
         let yTotal = 0
 		// number of live nodes 
-		numNodes = 0
+		let numNodes = 0
         // sum all x and y values
         for (j=0; j<asteroids[i].nodes.length; j++)
         {
@@ -307,15 +306,23 @@ function updateAsteroids()
 function maintainAsteroids()
 {
 	//removes asteroids with no nodes
+	let nodecount = 0
 	for (i=0; i<asteroids.length; i++)
-	{
-		if (asteroids[i].nodes.length == 0)
+	{	
+		for (j=0; j<asteroids[i].nodes.length; j++)
 		{
-			asteroids[i] = null
-			console.log("Asteroid No:"+i+" removed")
+			if (asteroids[i].nodes[j].body != null)
+			{
+				nodecount++
+			}
 		}
 	}
-	
+	if (nodecount == 0)
+	{
+		asteroids[i] = null
+		console.log("Asteroid No:"+i+" removed")
+	}
+
 	//count asteroids
 	let asteroidCount = 0
 	for (i=0; i<asteroids.length; i++)
