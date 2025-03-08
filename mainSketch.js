@@ -291,10 +291,10 @@ function updateAsteroids()
 			// move the node towards the center of mass
 			//only if node isnt dead
 			if ((asteroids[i].nodes[j].body != null) )
-				{
-					console.log("moving node")
-					asteroids[i].nodes[j].attractTo(asteroids[i].centerMass.x, asteroids[i].centerMass.y, 0.1)
-				}
+			{
+				console.log("moving node")
+				asteroids[i].nodes[j].attractTo(asteroids[i].centerMass.x, asteroids[i].centerMass.y, 0.1)
+			}
         }
     }
 }
