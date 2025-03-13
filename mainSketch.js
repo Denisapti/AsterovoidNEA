@@ -1093,6 +1093,8 @@ function debugStats(user)
 	text("Health: " + user.health, 10, 10)
 	text("Value: " + user.value, 10, 20)
 	
+	text("Rotation: " + user.rotation, 10, 40)
+	
 	pop() 
 }
 
@@ -1111,17 +1113,20 @@ function healthIndicator(user)
 	let hpMax = user.maxHealth
 	let hp = user.health
 	let arcAngle = (hp * 360)/hpMax
+	//
+	user.rotation %= 360;
 	//determine start angle
-	startAngle = user.rotation - (arcAngle/2)
+	let startAngle = user.rotation - (arcAngle/2)
 	if (startAngle < 0){startAngle+=360}
 	//determine end angle
-	let endAngle = startAngle + arcAngle
+	let endAngle = startAngle + arcAngle - 0.0000001
 	if (endAngle > 360){endAngle-=360}
 
 	//draw arc
 	stroke(255,0,0)
-	fill(255,0,0,0)
+	noFill()
 	arc((width/2)-(location.x), (height/2)-(location.y), 100, 100, startAngle, endAngle)
+	text("Arc: " + [(width/2)-(location.x), (height/2)-(location.y), 100, 100, startAngle, endAngle], 10, 260)
 	pop()
 
 }
