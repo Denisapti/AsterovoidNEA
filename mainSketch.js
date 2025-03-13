@@ -1126,7 +1126,7 @@ function healthIndicator(user)
 	stroke(255,0,0)
 	noFill()
 	arc((width/2)-(location.x), (height/2)-(location.y), 100, 100, startAngle, endAngle)
-	text("Arc: " + [(width/2)-(location.x), (height/2)-(location.y), 100, 100, startAngle, endAngle], 10, 260)
+	//text("Arc: " + [(width/2)-(location.x), (height/2)-(location.y), 100, 100, startAngle, endAngle], 10, 260)
 	pop()
 
 }
