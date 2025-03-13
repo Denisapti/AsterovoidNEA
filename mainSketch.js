@@ -1093,7 +1093,7 @@ function debugStats(user)
 	text("Health: " + user.health, 10, 10)
 	text("Value: " + user.value, 10, 20)
 	
-	text("Rotation: " + user.rotation, 10, 40)
+	//text("Rotation: " + user.rotation, 10, 40)
 	
 	pop() 
 }
