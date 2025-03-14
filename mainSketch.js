@@ -10,7 +10,7 @@ var HPA = 1.0;
 var HPB = 1.0;
 
 function setup() {
-	createCanvas(900, 900);
+	createCanvas(windowWidth,windowHeight);
 
 	background(0);
 	console.log("main start");
