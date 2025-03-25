@@ -61,7 +61,11 @@ function setup() {
 	players.textSize = 15;
 	players.text = "([]}--";
 
-	
+	stationBodies = new interactables.Group();
+	stationBodies.collider = "d";
+	stationbodies.width = 208
+	stationbodies.height = 9
+	stationbodies.image = loadImage("stationBody.png")
 
 	torpedosObjs = new interactables.Group();
 	bulletObjs = new interactables.Group();
@@ -411,7 +415,7 @@ function detectCollision()
 						}
 					}
 
-                }
+                }																																																		
             }
         }
     }
