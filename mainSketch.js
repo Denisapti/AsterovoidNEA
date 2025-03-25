@@ -1,5 +1,5 @@
 // initialising variables
-
+stations = []
 roster = [];
 torpedos = [];
 bullets = [];
@@ -63,9 +63,16 @@ function setup() {
 
 	stationBodies = new interactables.Group();
 	stationBodies.collider = "d";
-	stationbodies.width = 208
-	stationbodies.height = 9
-	stationbodies.image = loadImage("stationBody.png")
+	stationBodies.width = 208
+	stationBodies.height = 9
+	stationBodies.image = loadImage("stationBody.png")
+
+	stationLeftWing = new interactables.Group();
+	stationLeftWing.collider = "d";	
+	stationLeftWing.width = 50
+	stationLeftWing.height = 50
+	stationLeftWing.image = loadImage("stationLeftWing.png")
+	
 
 	torpedosObjs = new interactables.Group();
 	bulletObjs = new interactables.Group();
@@ -93,8 +100,8 @@ function setup() {
 	drills.durability = 150
 	drills.mass = 1
 	
-	
-	addPlayerShip();
+	addStation()
+	addPlayerShip(stations[0]);
 
 	//setup healthbars to show health (controlled in check health loop) <abandoned>
 	// healthBarA = new Sprite();
@@ -137,7 +144,20 @@ function setup() {
 // 	healthBarB.color = color(255, 0, 0, opacity)
 // }
 
-function addPlayerShip() {
+function addStation() 
+{
+	station = {}
+	station.bodyObj = new stationBodies.Sprite();
+	station.players = []
+	station.bodyObj.health = 1000
+	station.bodyObj.maxHealth = 1000
+	station.bodyObj.value = 0
+	station.bodyObj.durability = 300
+
+	stations.push(station)
+}
+
+function addPlayerShip(station) {
 	player = {
 		playerID: 0,
 		obj: null,
@@ -152,7 +172,8 @@ function addPlayerShip() {
 	player.obj.durability = 100
 	player.abilities = ["torpedo", "gun"];
 	player.abilityState = 0;
-	
+	station.players.push(player)
+	player.station = station;
 	roster[player.playerID] = player;
 
 	//create and attach a drill to the player
