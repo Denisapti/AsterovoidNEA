@@ -55,11 +55,9 @@ function setup() {
 
 	players = new interactables.Group();
 	players.collider = "d";
-	players.color = "blue";
 	players.h = 25;
 	players.w = 80;
-	players.textSize = 15;
-	players.text = "([]}--";
+	players.image = loadImage("ship.png");
 
 	stationBodies = new interactables.Group();
 	stationBodies.collider = "d";
@@ -69,9 +67,33 @@ function setup() {
 
 	stationLeftWing = new interactables.Group();
 	stationLeftWing.collider = "d";	
-	stationLeftWing.width = 50
-	stationLeftWing.height = 50
+	stationLeftWing.width = 16
+	stationLeftWing.height = 32
 	stationLeftWing.image = loadImage("stationLeftWing.png")
+
+	stationRightWing = new interactables.Group();
+	stationRightWing.collider = "d";
+	stationRightWing.width = 16
+	stationRightWing.height = 32
+	stationRightWing.image = loadImage("stationRightWing.png")
+
+	stationBridge = new interactables.Group();
+	stationBridge.collider = "d";
+	stationBridge.width = 12
+	stationBridge.height = 61
+	stationBridge.image = loadImage("stationBridge.png")
+
+	stationLeftArm = new interactables.Group();
+	stationLeftArm.collider = "d";
+	stationLeftArm.width = 60
+	stationLeftArm.height = 5
+	stationLeftArm.image = loadImage("stationLeftArm.png")
+
+	stationRightArm = new interactables.Group();
+	stationRightArm.collider = "d";
+	stationRightArm.width = 60
+	stationRightArm.height = 5
+	stationRightArm.image = loadImage("stationRightArm.png")
 	
 
 	torpedosObjs = new interactables.Group();
@@ -146,13 +168,72 @@ function setup() {
 
 function addStation() 
 {
+	//select a random location for the station on the map
+	let xVal = 0//getRandomNumber(-worldRadius + 200, worldRadius -200)
+	let yVal = 0//getRandomNumber(-worldRadius + 200, worldRadius -200)
+
+
 	station = {}
-	station.bodyObj = new stationBodies.Sprite();
+	station.bodyObj = new stationBodies.Sprite(xVal, yVal)
 	station.players = []
 	station.bodyObj.health = 1000
 	station.bodyObj.maxHealth = 1000
 	station.bodyObj.value = 0
 	station.bodyObj.durability = 300
+
+	station.leftWingObj = new stationLeftWing.Sprite(xVal - 96, yVal-21)
+	station.leftWingObj.health = 500
+	station.leftWingObj.maxHealth = 500
+	station.leftWingObj.value = 0
+	station.leftWingObj.durability = 200
+
+	station.rightWingObj = new stationRightWing.Sprite(xVal - 96, yVal+21)
+	station.rightWingObj.health = 500
+	station.rightWingObj.maxHealth = 500
+	station.rightWingObj.value = 0
+	station.rightWingObj.durability = 200
+
+	station.bridgeObj = new stationBridge.Sprite(xVal + 110, yVal)
+	station.bridgeObj.health = 500
+	station.bridgeObj.maxHealth = 500
+	station.bridgeObj.value = 0
+	station.bridgeObj.durability = 200
+	
+	station.leftArmObj = new stationLeftArm.Sprite(xVal - 58, yVal-37)
+	station.leftArmObj.health = 500
+	station.leftArmObj.maxHealth = 500
+	station.leftArmObj.value = 0
+	station.leftArmObj.durability = 200
+	
+	station.rightArmObj = new stationRightArm.Sprite(xVal - 58, yVal+37)
+	station.rightArmObj.health = 500
+	station.rightArmObj.maxHealth = 500
+	station.rightArmObj.value = 0
+	station.rightArmObj.durability = 200
+
+	//glue all the parts of the station together
+	new GlueJoint(station.bodyObj, station.leftWingObj)
+	new GlueJoint(station.bodyObj, station.rightWingObj)
+	new GlueJoint(station.bodyObj, station.bridgeObj)
+	//glue the arms to the wings
+	new GlueJoint(station.leftWingObj, station.leftArmObj)
+	new GlueJoint(station.rightWingObj, station.rightArmObj)
+	//make joints invisible
+	for (let i = 0; i < 3; i++) {
+		station.bodyObj.joints[i].visible = false;
+	}
+	station.leftWingObj.joints[0].visible = false
+	station.rightWingObj.joints[0].visible = false
+
+	//make the body overlap the wings and the bridge via overlaps()
+	station.bodyObj.overlaps(station.leftWingObj)
+	station.bodyObj.overlaps(station.rightWingObj)
+	station.bodyObj.overlaps(station.bridgeObj)
+	//make the arms overlap the wings
+	station.leftWingObj.overlaps(station.leftArmObj)
+	station.rightWingObj.overlaps(station.rightArmObj)
+
+
 
 	stations.push(station)
 }
@@ -478,9 +559,17 @@ function kineticDamage(obj1, obj2)
         return;
     }
 
-	// apply damage to objs
-	obj1.health -= dmg1;
-	obj2.health -= dmg2;
+	//check if damages are more than 10
+	if (dmg1 > 10)
+	{
+		// apply damage to objs
+		obj1.health -= dmg1;
+	}
+	//repeat for obj2
+	if (dmg2 > 10)
+	{
+		obj2.health -= dmg2;
+	}
 
     // Log the new health values
     console.log(`Obj1 Health: ${obj1.health}, Obj2 Health: ${obj2.health}`);
