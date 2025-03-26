@@ -269,7 +269,25 @@ function dock(obj1, obj2)
 		let player = obj2
 		let station = obj1
 	}
-
+	//check if the player can dock and isnt already docked
+	if (player.canDock && !player.isDocked)
+	{
+		
+		//glue the player to the station
+		new GlueJoint(player.obj, station.bodyObj)
+		//add the player to the station's docked players in slot one, if its full add to slot 2
+		if (station.dockedPlayers[0] == null)
+		{
+			station.dockedPlayers[0] = player
+		}
+		else
+		{
+			station.dockedPlayers[1] = player
+		}
+		player.canDock = false
+		player.isDocked = true
+	}
+	
 	//glue the player to the station
 	new GlueJoint(player.obj, station.bodyObj)
 	//add the player to the station's docked players in slot one, if its full add to slot 2
@@ -281,6 +299,50 @@ function dock(obj1, obj2)
 	{
 		station.dockedPlayers[1] = player
 	}
+	player.canDock = false
+	player.isDocked = true
+
+}
+
+function unDock(obj1, obj2)
+{
+
+	//log if undock has been called
+	console.log("undock called")
+	//identify which is the player and which is the station
+	if (players.contains(obj1))
+	{
+		let player = obj1
+		let station = obj2
+	}
+	else
+	{
+		let player = obj2
+		let station = obj1
+	}
+
+	//remove the glue joint between the player and the station
+	for (let j of player.obj.joints)
+	{
+		if (j.bodyB == station.bodyObj)
+		{
+			j.remove()
+		}
+	}
+	//remove the player from the station's docked players
+	if (station.dockedPlayers[0] == player)
+	{
+		station.dockedPlayers[0] = null
+	}
+	else
+	{
+		station.dockedPlayers[1] = null
+	}
+	
+	//five second delay before the player can dock again
+	player.canDock = false
+	player.isDocked = false
+	setTimeout(function(){player.canDock = true}, 5000)	
 
 
 }
@@ -301,6 +363,8 @@ function addPlayerShip(station) {
 	player.obj.durability = 100
 	player.abilities = ["torpedo", "gun"];
 	player.abilityState = 0;
+	player.isDocked = false;
+	player.canDock = true;
 
 
 	//create and attach a drill to the player
@@ -1010,10 +1074,11 @@ function getRandomNumber(min, max) {
 
 function ctrl(playerID) {
 
-	//health debug suicide code
+	//debug unDock trigger
 	if (kb.presses("d"))
-	{
-		roster[playerID].obj.health -= 1
+	{	
+		console.log("undock d pressed")
+		unDock(roster[playerID].obj, roster[playerID].station.bodyObj)
 	}
 
 
