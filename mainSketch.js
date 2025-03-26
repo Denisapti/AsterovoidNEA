@@ -95,25 +95,29 @@ function setup() {
 	stationRightArm.height = 5
 	stationRightArm.image = loadImage("stationRightArm.png")
 	
+	dockingSensor = new interactables.Group();
+	dockingSensor.collider = "d";
+	dockingSensor.diameter = 2
+	dockingSensor.color = "Yellow"
 
 	torpedosObjs = new interactables.Group();
 	bulletObjs = new interactables.Group();
 
 	asteroidNodes = new interactables.Group();
-	asteroidNodes.color = "grey";
 	asteroidNodes.health = 10 
 	asteroidNodes.value = 10
 	asteroidNodes.diameter = 10;
 	asteroidNodes.collider = "d";
 	asteroidNodes.bounciness = 0
+	asteroidNodes.image = loadImage("node.png")
 
 	asteroidValNodes = new interactables.Group();
-	asteroidValNodes.color = "red";
 	asteroidValNodes.health = 15
 	asteroidValNodes.value = 30
 	asteroidValNodes.diameter = 10;
 	asteroidValNodes.collider = "d";
 	asteroidValNodes.bounciness = 0
+	asteroidValNodes.image = loadImage("valNode.png")
 	
 	drills = new interactables.Group();
 	drills.color = "grey";
@@ -176,6 +180,9 @@ function addStation()
 	station = {}
 	station.bodyObj = new stationBodies.Sprite(xVal, yVal)
 	station.players = []
+
+	station.dockedPlayers = []
+
 	station.bodyObj.health = 1000
 	station.bodyObj.maxHealth = 1000
 	station.bodyObj.value = 0
@@ -233,10 +240,51 @@ function addStation()
 	station.leftWingObj.overlaps(station.leftArmObj)
 	station.rightWingObj.overlaps(station.rightArmObj)
 
+	//add docking sensors to both sides of the station
+	station.leftDockingSensor = new dockingSensor.Sprite(xVal - 30, yVal-5)
+	station.rightDockingSensor = new dockingSensor.Sprite(xVal - 30, yVal+5)
+	station.leftDockingSensor.owner = station
+	station.rightDockingSensor.owner = station
+	//glue the docking sensors to the station
+	new GlueJoint(station.bodyObj, station.leftDockingSensor)
+	new GlueJoint(station.bodyObj, station.rightDockingSensor)
+	//makw the docking sensors overlap the station
+	station.bodyObj.overlaps(station.leftDockingSensor)
+	station.bodyObj.overlaps(station.rightDockingSensor)
 
-
+	
 	stations.push(station)
 }
+
+function dock(obj1, obj2)
+{
+	//identify which is the player and which is the station
+	if (players.contains(obj1))
+	{
+		let player = obj1
+		let station = obj2
+	}
+	else
+	{
+		let player = obj2
+		let station = obj1
+	}
+
+	//glue the player to the station
+	new GlueJoint(player.obj, station.bodyObj)
+	//add the player to the station's docked players in slot one, if its full add to slot 2
+	if (station.dockedPlayers[0] == null)
+	{
+		station.dockedPlayers[0] = player
+	}
+	else
+	{
+		station.dockedPlayers[1] = player
+	}
+
+
+}
+
 
 function addPlayerShip(station) {
 	player = {
@@ -253,9 +301,7 @@ function addPlayerShip(station) {
 	player.obj.durability = 100
 	player.abilities = ["torpedo", "gun"];
 	player.abilityState = 0;
-	station.players.push(player)
-	player.station = station;
-	roster[player.playerID] = player;
+
 
 	//create and attach a drill to the player
 	drill = new drills.Sprite((player.obj.x + (player.obj.width/2) +30), player.obj.y, 
@@ -269,6 +315,22 @@ function addPlayerShip(station) {
 	new GlueJoint(player.obj, drill)
 	drill.playerID = player.playerID
 	drill.mass = 0
+
+	//add L/R docking sensors to the player
+	player.leftDockingSensor = new dockingSensor.Sprite(player.obj.x + 30, player.obj.y-12)
+	player.rightDockingSensor = new dockingSensor.Sprite(player.obj.x + 30, player.obj.y+12)
+	player.leftDockingSensor.owner = player
+	player.rightDockingSensor.owner = player
+	//glue the docking sensors to the player
+	new GlueJoint(player.obj, player.leftDockingSensor)
+	new GlueJoint(player.obj, player.rightDockingSensor)
+	//make the docking sensors overlap the player
+	player.obj.overlaps(player.leftDockingSensor)
+	player.obj.overlaps(player.rightDockingSensor)
+
+	station.players.push(player)
+	player.station = station;
+	roster[player.playerID] = player;
 }
 
 function mine(node, drill)
@@ -462,13 +524,36 @@ function detectCollision()
 							// if i is a valuable, it is collected
 							i.remove();
 							j.value += i.value;
+							shouldDmg = false;
 						} 
 						else if (valuables.contains(j)) 
 						{
 							// if j is a valuable, it is collected
 							j.remove();
 							i.value += j.value;
+							shouldDmg = false;
 						} 
+
+						// check if i is a docking sensor
+						if (dockingSensor.contains(i))
+						{
+							shouldDmg = false
+							// check if j is a docking sensor
+							if (dockingSensor.contains(j)) 
+							{
+								// if both are docking sensors, dock the player
+								dock(i.owner,j.owner)
+							}
+						}
+						//repeat for j
+						else if (dockingSensor.contains(j))
+						{
+							shouldDmg = false
+							if (dockingSensor.contains(i)) 
+							{
+								dock(j.owner,i.owner)
+							}
+						}
 
 					
 						//check if i or j are a drill
@@ -644,14 +729,39 @@ function enforceBorders() {
 				//mirrorObject(i);
 			} else {
 
-				//if its part of an asteroid
-				if ((!asteroidNodes.includes(i)) && (!asteroidValNodes.includes(i)))
+				//check not and asteroid or station
+				if ((!asteroidNodes.includes(i)) && (!asteroidValNodes.includes(i)) )
 				{
-					//teleport the object
-					crossBorder(i);
+					if ( (!stationBridge.includes(i)) && (!stationLeftArm.includes(i)) && (!stationRightArm.includes(i)) && (!stationLeftWing.includes(i)) && (!stationRightWing.includes(i))  && (!dockingSensor.includes(i)))
+					{
+						if (stationBodies.includes(i))
+						{
+							//find the station that the body is in
+							for (let s of stations)
+							{
+								if (s.bodyObj == i)
+								{
+									//teleport the station
+									crossBorder(s.bodyObj)
+									crossBorder(s.leftWingObj)
+									crossBorder(s.rightWingObj)
+									crossBorder(s.bridgeObj)
+									crossBorder(s.leftArmObj)
+									crossBorder(s.rightArmObj)
+									crossBorder(s.leftDockingSensor)
+									crossBorder(s.rightDockingSensor)
+								}
+							}
+						}
+					}
+					else
+					{
+						//teleport the object
+						crossBorder(i);
+					}
 				}
 				else
-				{
+				{	
 					// check the asteroids crossing the border
 					for (j of asteroids)
 					{
