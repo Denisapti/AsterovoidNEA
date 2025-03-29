@@ -180,7 +180,8 @@ function addStation()
 	station = {}
 	station.bodyObj = new stationBodies.Sprite(xVal, yVal)
 	station.players = []
-
+	station.stationMap = []
+	station.MapLoaded = false
 	station.dockedPlayers = []
 
 	station.bodyObj.health = 1000
@@ -320,12 +321,14 @@ function unDock(obj1, obj2)
 		let player = obj2
 		let station = obj1
 	}
-
+	
 	//remove the glue joint between the player and the station
 	for (let j of player.obj.joints)
-	{
-		if (j.bodyB == station.bodyObj)
+	{	
+		console.log(j)
+		if (j.spriteB == station.bodyObj)
 		{
+			
 			j.remove()
 		}
 	}
@@ -347,6 +350,17 @@ function unDock(obj1, obj2)
 
 }
 
+function boardStation(player,station)
+{
+	
+	player.gameState = "onFoot"
+	if (station.MapLoaded == false)
+	{
+		//load the station map
+		 //loadStationMap()
+		
+	}
+}
 
 function addPlayerShip(station) {
 	player = {
@@ -365,6 +379,7 @@ function addPlayerShip(station) {
 	player.abilityState = 0;
 	player.isDocked = false;
 	player.canDock = true;
+	player.gameState = "ship"; // 4 options, ship, station, dead, onFoot
 
 
 	//create and attach a drill to the player
@@ -1072,14 +1087,23 @@ function getRandomNumber(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
-function ctrl(playerID) {
-
-	//debug unDock trigger
-	if (kb.presses("d"))
-	{	
-		console.log("undock d pressed")
-		unDock(roster[playerID].obj, roster[playerID].station.bodyObj)
+function ctrl(playerID) 
+{
+	if (roster[playerID].gameState == "ship") 
+	{
+		ctrlShip(playerID);
 	}
+	else if (roster[playerID].gameState == "station") 
+	{}
+	else if (roster[playerID].gameState == "dead") 
+	{}
+	else (roster[playerID].gameState == "onFoot") 
+	{}
+	
+}
+
+function ctrlShip(playerID)
+{
 
 
 
@@ -1094,6 +1118,26 @@ function ctrl(playerID) {
 			contros[playerID].rightStick.x,
 			contros[playerID].rightStick.y
 		);
+
+		//DOCKING
+
+		// unDock trigger
+		if (contros[playerID].pressing("b"))
+		{	
+			
+			console.log("undock pressed")
+			unDock(roster[playerID].obj, roster[playerID].station.bodyObj)
+		}	
+
+		//board station trigger
+		if (contros[playerID].pressing("y"))
+			{	
+				
+				console.log("boarding pressed")
+				boardStation(roster[playerID], roster[playerID].station)
+			}	
+
+
 
 		//hotbar switcher
 		if (contros[playerID].presses("left")) {
@@ -1280,6 +1324,18 @@ function ctrl(playerID) {
 			roster[playerID].prevFramePressedRB = false;
 		}
 	}
+
+	followCamera(roster[playerID].obj);
+
+	push()
+	//Mimic p5.play's normal camera functionality
+	translate(-camera.x + width/2, -camera.y + height/2)
+	//Draw all sprites with the offset
+	allSprites.draw()
+	pop()
+	//Draw UI without the offset
+	uiHandler(roster[playerID].obj);
+
 }
 
 //function ctrlB(){          disabled
@@ -1514,15 +1570,5 @@ function draw() {
 	drillCollection()
 
 	
-	followCamera(roster[0].obj);
-
-	push()
-	//Mimic p5.play's normal camera functionality
-	translate(-camera.x + width/2, -camera.y + height/2)
-	//Draw all sprites with the offset
-	allSprites.draw()
-	pop()
-	//Draw UI without the offset
-	uiHandler(roster[0].obj);
 
 }
