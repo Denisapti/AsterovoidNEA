@@ -125,7 +125,49 @@ function setup() {
 	drills.value = 20
 	drills.durability = 150
 	drills.mass = 1
+
+	//set up tiles 
+	walls = new Group();
+	walls.collider = "s"
+	walls.color = "grey";
+	walls.width = 20
+	walls.height = 20
+	walls.tile = "w"
+
+	doors = new Group();
+	doors.collider = "s"
+	doors.color = "black";
+	doors.width = 20
+	doors.height = 20
+	doors.tile = "d"
+
+	Vis = new walls.Group();
+	Vis.color = "yellow";
+	Vis.tile = "V"
+
+	shop = new Group();
+	shop.collider = "s"
+	shop.color = "green";
+	shop.width = 20
+	shop.height = 20
+	shop.tile = "s"
+
+	helm = new Group();
+	helm.collider = "s"
+	helm.color = "brown";
+	helm.width = 20
+	helm.height = 20
+	helm.tile = "h"
+
+	Characters = new Group();
+	Characters.collider = "d"
+	characters.color = "red";
+	Characters.width = 20
+	Characters.height = 20	
+	Characters.tile = "c"
 	
+	
+
 	addStation()
 	addPlayerShip(stations[0]);
 
@@ -360,6 +402,21 @@ function boardStation(player,station)
 		 //loadStationMap()
 		
 	}
+}
+
+function leaveStation(player)
+{
+	player.gameState = "ship"
+}
+
+function pilotStation(player)
+{
+	player.gameState = "station"
+}
+
+function pilotStationEnd(player)
+{
+	player.gameState = "onFoot"
 }
 
 function addPlayerShip(station) {
@@ -1094,12 +1151,105 @@ function ctrl(playerID)
 		ctrlShip(playerID);
 	}
 	else if (roster[playerID].gameState == "station") 
-	{}
+	{
+		ctrlStation(playerID, roster[playerID].station);
+	}
 	else if (roster[playerID].gameState == "dead") 
 	{}
 	else (roster[playerID].gameState == "onFoot") 
-	{}
+	{
+		ctrlCharacter(playerID);
+	}
 	
+}
+
+function ctrlStation(playerID)
+{
+	
+
+
+	//use of contros[playerID] instead of contros, allows inputs from multiple controlers via increasing the contros[] array's index
+	if (contros[playerID]) {
+		roster[playerID].playerLocation = createVector(
+			roster[playerID].station.bodyObj.x,
+			roster[playerID].station.bodyObj.y
+		);
+
+		contros[playerID].rightStick.bearing = findBearing(
+			contros[playerID].rightStick.x,
+			contros[playerID].rightStick.y
+		);
+
+
+		// unPilot trigger
+		if (contros[playerID].pressed("b"))
+		{	
+			
+			console.log("undock pressed")
+			pilotStationEnd(roster[playerID].station.bodyObj, roster[playerID].station.bodyObj.bodyObj)
+		}	
+
+
+		if (contros[playerID].lt > 0.2) {
+			roster[playerID].station.bodyObj.rotationSpeed -= 0.001 * contros[playerID].lt;
+		}
+		if (contros[playerID].rt > 0.2) {
+			roster[playerID].station.bodyObj.rotationSpeed += 0.001 * contros[playerID].rt;
+		}
+		if (contros[playerID].leftStick.y < -0.2) {
+			roster[playerID].station.bodyObj.bearing = roster[playerID].station.bodyObj.rotation;
+			roster[playerID].station.bodyObj.applyForce(-11 * contros[playerID].leftStick.y);
+		}
+		if (contros[playerID].leftStick.y > 0.2) {
+			roster[playerID].station.bodyObj.bearing = roster[playerID].station.bodyObj.rotation + 180;
+			roster[playerID].station.bodyObj.applyForce(6 * contros[playerID].leftStick.y);
+		}
+		if (contros[playerID].leftStick.x > 0.2) {
+			roster[playerID].station.bodyObj.bearing = roster[playerID].station.bodyObj.rotation + 90;
+			roster[playerID].station.bodyObj.applyForce(2 * contros[playerID].leftStick.x);
+		}
+		if (contros[playerID].leftStick.x < -0.2) {
+			roster[playerID].station.bodyObj.bearing = roster[playerID].station.bodyObj.rotation + 270;
+			roster[playerID].station.bodyObj.applyForce(-2 * contros[playerID].leftStick.x);
+		}
+
+
+	}
+
+	followCamera(roster[playerID].station.bodyObj);
+
+	push()
+	//Mimic p5.play's normal camera functionality
+	translate(-camera.x + width/2, -camera.y + height/2)
+	//Draw all sprites with the offset
+	allSprites.draw()
+	pop()
+	//Draw UI without the offset
+	uiHandler(roster[playerID].station.bodyObj);
+
+}
+
+function ctrlCharacter(playerID) 
+{
+	//use of contros[playerID] instead of contros, allows inputs from multiple controlers via increasing the contros[] array's index
+	if (contros[playerID])
+	{
+		//leave station trigger
+		if (contros[playerID].pressed("b"))
+			{	
+				
+				console.log("pilot ship pressed")
+				leaveStation(roster[playerID])
+			}	
+		//pilot station trigger
+		if (contros[playerID].pressed("x"))
+			{	
+				
+				console.log("pilot station pressed")
+				pilotStation(roster[playerID], roster[playerID].station)
+			}			
+		
+	}
 }
 
 function ctrlShip(playerID)
@@ -1130,7 +1280,7 @@ function ctrlShip(playerID)
 		}	
 
 		//board station trigger
-		if (contros[playerID].pressing("y"))
+		if (contros[playerID].pressed("y"))
 			{	
 				
 				console.log("boarding pressed")
