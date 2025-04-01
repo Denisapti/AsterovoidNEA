@@ -129,10 +129,32 @@ function setup() {
 	//set up tiles 
 	walls = new Group();
 	walls.collider = "s"
-	walls.color = "grey";
+	walls.color = "black";
 	walls.width = 20
 	walls.height = 20
-	walls.tile = "w"
+	walls.tile = "W"
+
+	subWalls = new Group();
+	subWalls.collider = "s"
+	subWalls.color = "darkgrey";
+	subWalls.width = 20
+	subWalls.height = 20
+	subWalls.tile = "w"
+
+
+	floor = new Group();
+	floor.collider = "n"
+	floor.color = "grey";
+	floor.width = 20
+	floor.height = 20
+	floor.tile = "."
+
+	glass = new Group(); 
+	glass.collider = "s"
+	glass.color = "blue";
+	glass.width = 20
+	glass.height = 20
+	glass.tile = "g"
 
 	doors = new Group();
 	doors.collider = "s"
@@ -143,7 +165,7 @@ function setup() {
 
 	Vis = new walls.Group();
 	Vis.color = "yellow";
-	Vis.tile = "V"
+	Vis.tile = "v"
 
 	shop = new Group();
 	shop.collider = "s"
@@ -159,12 +181,59 @@ function setup() {
 	helm.height = 20
 	helm.tile = "h"
 
-	Characters = new Group();
-	Characters.collider = "d"
-	characters.color = "red";
-	Characters.width = 20
-	Characters.height = 20	
-	Characters.tile = "c"
+	stationTiles = new Tiles(
+	   ["WWWWWWWWddddddddddWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+		"W.......vddddddddv........................WWWWWWWWW................................................g",
+		"W........vvddddvv.........................WWWWWWWWW................................................g",
+		"W..........vvvv...........................WWWWWWWWW................................................g",
+		"W.........................................WWWWWWWWW................................................g",
+		"W...............................ssss......WWWWWWWWW................................................g",
+		"W.............................ssssssss....WWWWWWWWW................................................g",
+		"W.............................ssssssss....WWWWWWWWW................................................g",
+		"W............................ssssssssss...WWWWWWWWW................................................g",
+		"W............................ssssssssss...WWWWWWWWW................................................g",
+		"W............................ssssssssss...WWWWWWWWW................................................g",
+		"W............................ssssssssss...WWWWWWWWW................................................g",
+		"W.............................ssssssss....WWWWWWWWW................................................g",
+		"W.............................ssssssss....WWWWWWWWW................................................g",
+		"W...............................ssss......WWWWWWWWW..................................wwwwwww.......g",
+		"W.........................................WWWWWWWWW..................................wwwwwww.......g",
+		"W.........................................WWWWWWWWW..................................h...gww.......g",
+		"W.........................................WWWWWWWWW..................................h...gww.......g",
+		"W.........................................WWWWWWWWW.....................................wwww.......g",
+		"W.........................WWWWWWWWWWWWWWWWWWWWWWWWW.....................................wwww.......g",
+		"W....................................................................................h...gww.......g",
+		"W....................................................................................h...gww.......g",
+		"W.......................................................................................wwww.......g",
+		"W.......................................................................................wwww.......g",
+		"W....................................................................................h...gww.......g",
+		"W....................................................................................h...gww.......g",
+		"W.......................................................................................wwww.......g",
+		"W.......................................................................................wwww.......g",
+		"W....................................................................................h...gww.......g",
+		"W....................................................................................h...gww.......g",
+		"W.........................WWWWWWWWWWWWWWWWWWWWWWWWW.....................................wwww.......g",
+		"W.........................................WWWWWWWWW.....................................wwww.......g",
+		"W.........................................WWWWWWWWW..................................h...gww.......g",
+		"W.........................................WWWWWWWWW..................................h...gww.......g",
+		"W.........................................WWWWWWWWW..................................wwwwwww.......g",
+		"W...............................ssss......WWWWWWWWW..................................wwwwwww.......g",
+		"W.............................ssssssss....WWWWWWWWW................................................g",
+		"W.............................ssssssss....WWWWWWWWW................................................g",
+		"W............................ssssssssss...WWWWWWWWW................................................g",
+		"W............................ssssssssss...WWWWWWWWW................................................g",
+		"W............................ssssssssss...WWWWWWWWW................................................g",
+		"W............................ssssssssss...WWWWWWWWW................................................g",
+		"W.............................ssssssss....WWWWWWWWW................................................g",
+		"W.............................ssssssss....WWWWWWWWW................................................g",
+		"W...............................ssss......WWWWWWWWW................................................g",
+		"W.........................................WWWWWWWWW................................................g",
+		"W..........vvvv...........................WWWWWWWWW................................................g",
+		"W........vvddddvv.........................WWWWWWWWW................................................g",
+		"W.......vddddddddv........................WWWWWWWWW................................................g",
+		"WWWWWWWWddddddddddWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW"],
+		0,(-bufferRadius-100),walls.w,walls.h
+	);
 	
 	
 
@@ -1231,6 +1300,20 @@ function ctrlStation(playerID)
 
 function ctrlCharacter(playerID) 
 {
+	// center camera on (50*20),-(bufferRadius+100+(25*20))
+	
+	camera.x = 50 * 20;
+	camera.y = -(bufferRadius + 100 + (25 * 20));
+	camera.zoom = 0.01;
+	push()
+	//Mimic p5.play's normal camera functionality
+	translate(-camera.x + width/2, -camera.y + height/2)
+	//Draw all sprites with the offset
+	allSprites.draw()
+	pop()
+	//Draw UI without the offset
+
+
 	//use of contros[playerID] instead of contros, allows inputs from multiple controlers via increasing the contros[] array's index
 	if (contros[playerID])
 	{
