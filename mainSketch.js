@@ -1,13 +1,37 @@
 // initialising variables
-stations = [];
-roster = [];
-torpedos = [];
-bullets = [];
-asteroids = [];
-mini = {};
+let stations = [],
+  roster = [],
+  torpedos = [],
+  bullets = [],
+  asteroids = [],
+  mini = {};
 // player health
 var HPA = 1.0;
 var HPB = 1.0;
+
+//camera not camera
+let mimicam = {
+  x: 0,
+  y: 0,
+  zoom: 1,
+  rotation: 0,
+};
+
+//god help me i need this
+var playerHorizon = 0;
+var worldRadius = 0;
+var bufferRadius = 0;
+var interactables;
+var valuables;
+var players;
+var stationBodies,
+  stationLeftArm,
+  stationLeftWing,
+  stationRightArm,
+  stationRightWing,
+  stationBridge,
+  stationMap;
+var asteroidNodes, asteroidValNodes, drills;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -129,7 +153,7 @@ function setup() {
   //set up tiles
   walls = new Group();
   walls.collider = "s";
-  walls.color = "black";
+  walls.color = "white"//"black";
   walls.width = 20;
   walls.height = 20;
   walls.tile = "W";
@@ -516,7 +540,8 @@ function addPlayerShip(station) {
 function mine(node, drill) {
   //mine a node
   //find the asteroid that the node is in
-  for (let a of asteroids) { //this validation might be
+  for (let a of asteroids) {
+    //this validation might be
     //unneccessary I will look into removing it
     if (a.nodes.includes(node)) {
       //damage the node
@@ -579,7 +604,7 @@ function genAsteroid(xVal, yVal, standard, valNodes) {
     asteroids.push(asteroid);
   }
 
-  console.log("Asteroid generated:" + asteroid);
+  console.log("Asteroid generated:", asteroid);
 }
 
 function updateAsteroids() {
@@ -606,14 +631,14 @@ function updateAsteroids() {
     asteroids[i].centerMass.x = xCenter;
     asteroids[i].centerMass.y = yCenter;
     //log the center of mass
-    console.log("Center of mass: x:" + xCenter + " y:" + yCenter);
+    //console.log("Center of mass: x:" + xCenter + " y:" + yCenter);
 
     // move all nodes towards the center
     for (j = 0; j < asteroids[i].nodes.length; j++) {
       // move the node towards the center of mass
       //only if node isnt dead
       if (asteroids[i].nodes[j].body != null) {
-        console.log("moving node");
+        //console.log("moving node");
         asteroids[i].nodes[j].attractTo(
           asteroids[i].centerMass.x,
           asteroids[i].centerMass.y,
@@ -626,17 +651,18 @@ function updateAsteroids() {
 
 function maintainAsteroids() {
   //removes asteroids with no nodes
-  let nodecount = 0;
   for (i = 0; i < asteroids.length; i++) {
+    let nodecount = 0;
     for (j = 0; j < asteroids[i].nodes.length; j++) {
       if (asteroids[i].nodes[j].body != null) {
         nodecount++;
       }
     }
-  }
-  if (nodecount == 0) {
-    asteroids[i] = null;
-    console.log("Asteroid No:" + i + " removed");
+    if (nodecount === 0) {
+      asteroids.splice(i, 1);
+      console.log("Asteroid No:" + i + " removed");
+      i--;
+    }
   }
 
   //count asteroids
@@ -725,7 +751,7 @@ function detectCollision() {
 
             for (let a of asteroids) {
               if (a.nodes.includes(i) && a.nodes.includes(j)) {
-                console.log("same asteroid");
+                //console.log("same asteroid");
                 shouldDmg = false;
                 break;
               }
@@ -747,10 +773,10 @@ function kineticDamage(obj1, obj2) {
   let relativeSpeed = p5.Vector.sub(obj1.vel, obj2.vel).mag();
 
   // Log the relative speed and durability values
-  console.log(`Relative Speed: ${relativeSpeed}`);
-  console.log(
-    `Obj1 Durability: ${obj1.durability}, Obj2 Durability: ${obj2.durability}`
-  );
+  //console.log(`Relative Speed: ${relativeSpeed}`);
+  //console.log(
+  //  `Obj1 Durability: ${obj1.durability}, Obj2 Durability: ${obj2.durability}`
+  //);
 
   // Ensure relativeSpeed is a valid number
   if (isNaN(relativeSpeed)) {
@@ -770,7 +796,7 @@ function kineticDamage(obj1, obj2) {
   let dmg2 = relativeSpeed * (obj1.durability / obj2.durability);
 
   // Log the calculated damage values
-  console.log(`Damage to Obj1: ${dmg1}, Damage to Obj2: ${dmg2}`);
+  //console.log(`Damage to Obj1: ${dmg1}, Damage to Obj2: ${dmg2}`);
 
   // Ensure damage values are valid numbers
   if (isNaN(dmg1) || isNaN(dmg2)) {
@@ -789,7 +815,7 @@ function kineticDamage(obj1, obj2) {
   }
 
   // Log the new health values
-  console.log(`Obj1 Health: ${obj1.health}, Obj2 Health: ${obj2.health}`);
+  //console.log(`Obj1 Health: ${obj1.health}, Obj2 Health: ${obj2.health}`);
 }
 
 function detectDeath() {
@@ -822,8 +848,8 @@ function killObj(obj) {
 
 function followCamera(target) {
   // camera.zoom
-  camera.x = target.x + target.vel.x * -3; // follows with a delay based on
-  camera.y = target.y + target.vel.y * -3; // the target's velocity
+  mimicam.x = target.x + target.vel.x * -3; // follows with a delay based on
+  mimicam.y = target.y + target.vel.y * -3; // the target's velocity
 }
 
 // function updateInteractables(){<abandoned solution>
@@ -958,7 +984,7 @@ function runTorp() {
   //targeting system implemented so the opposing player is no longer hardcoded as the target
 
   for (i = 0; i < torpedos.length; i++) {
-    console.log(torpedos[i]);
+    //console.log(torpedos[i]);
     if (torpedos[i].obj.collides(torpedos[i].target) == false) {
       torpedos[i].obj.rotateTowards(torpedos[i].target, 0.1, 0);
       torpedos[i].obj.moveTo(torpedos[i].target.x, torpedos[i].target.y, 6);
@@ -1128,8 +1154,7 @@ function ctrl(playerID) {
   } else if (roster[playerID].gameState == "station") {
     ctrlStation(playerID, roster[playerID].station);
   } else if (roster[playerID].gameState == "dead") {
-  } else roster[playerID].gameState == "onFoot";
-  {
+  } else if (roster[playerID].gameState == "onFoot") { //Missed an `if`
     ctrlCharacter(playerID);
   }
 }
@@ -1194,31 +1219,16 @@ function ctrlStation(playerID) {
     }
   }
 
-  followCamera(roster[playerID].station.bodyObj);
-
-  push();
-  //Mimic p5.play's normal camera functionality
-  translate(-camera.x + width / 2, -camera.y + height / 2);
-  //Draw all sprites with the offset
-  allSprites.draw();
-  pop();
-  //Draw UI without the offset
-  uiHandler(roster[playerID].station.bodyObj);
+  drawAll(roster[playerID].station.bodyObj);
 }
 
 function ctrlCharacter(playerID) {
   // center camera on (50*20),-(bufferRadius+100+(25*20))
 
-  camera.x = 50 * 20;
-  camera.y = -(bufferRadius + 100 + 25 * 20);
-  camera.zoom = 0.01;
-  push();
-  //Mimic p5.play's normal camera functionality
-  translate(-camera.x + width / 2, -camera.y + height / 2);
-  //Draw all sprites with the offset
-  allSprites.draw();
-  pop();
-  //Draw UI without the offset
+  mimicam.x = 50 * walls.w;
+  mimicam.y = -(bufferRadius - 100) + 15 * walls.h; //Don't have this in the bracket
+  mimicam.zoom = 0.6;
+  drawAll(null, false);
 
   //use of contros[playerID] instead of contros, allows inputs from multiple controlers via increasing the contros[] array's index
   if (contros[playerID]) {
@@ -1448,16 +1458,22 @@ function ctrlShip(playerID) {
     }
   }
 
-  followCamera(roster[playerID].obj);
+  drawAll(roster[playerID].obj);
+}
+
+function drawAll(owner, camFollows = true) {
+  if (owner && camFollows) followCamera(owner);
 
   push();
   //Mimic p5.play's normal camera functionality
-  translate(-camera.x + width / 2, -camera.y + height / 2);
+  translate(width/2, height/2);
+  scale(mimicam.zoom);
+  translate(-mimicam.x, -mimicam.y);
   //Draw all sprites with the offset
   allSprites.draw();
   pop();
   //Draw UI without the offset
-  uiHandler(roster[playerID].obj);
+  if (owner) uiHandler(owner);
 }
 
 //function ctrlB(){          disabled
@@ -1680,6 +1696,7 @@ function keyPressed() {
 }
 
 function draw() {
+  camera.off();
   clear();
   // interactables.update();    broken solution
 
