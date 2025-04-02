@@ -153,7 +153,7 @@ function setup() {
   //set up tiles
   walls = new Group();
   walls.collider = "s";
-  walls.color = "white"//"black";
+  walls.color = "white"; //"black";
   walls.width = 20;
   walls.height = 20;
   walls.tile = "W";
@@ -940,7 +940,7 @@ function endMirror(obj) {
 
 function mirrorObject(obj) {
   //target should be the actual
-  //interactables P5 instance not a managment object
+  //interactables P5 instance not a management object
   if (!obj.slave) {
     // ensure a slave is present
     obj.slave = new players.Sprite();
@@ -1154,7 +1154,8 @@ function ctrl(playerID) {
   } else if (roster[playerID].gameState == "station") {
     ctrlStation(playerID, roster[playerID].station);
   } else if (roster[playerID].gameState == "dead") {
-  } else if (roster[playerID].gameState == "onFoot") { //Missed an `if`
+  } else if (roster[playerID].gameState == "onFoot") {
+    //Missed an `if`
     ctrlCharacter(playerID);
   }
 }
@@ -1267,13 +1268,13 @@ function ctrlShip(playerID) {
     }
 
     //board station trigger
-    if (contros[playerID].pressed("y")) {
+    if (contros[playerID].pressing("y")) {
       console.log("boarding pressed");
       boardStation(roster[playerID], roster[playerID].station);
     }
 
     //hotbar switcher
-    if (contros[playerID].presses("left")) {
+    if (contros[playerID].pressing("left")) {
       if (roster[playerID].abilityState == 0) {
         roster[playerID].abilityState = roster[playerID].abilities.length - 1;
       } else {
@@ -1282,7 +1283,7 @@ function ctrlShip(playerID) {
       console.log(roster[playerID].abilityState);
     }
 
-    if (contros[playerID].presses("right")) {
+    if (contros[playerID].pressing("right")) {
       if (
         roster[playerID].abilityState ==
         roster[playerID].abilities.length - 1
@@ -1359,7 +1360,7 @@ function ctrlShip(playerID) {
 
           launchTorp(playerID, roster[playerID].target);
           roster[playerID].target = null;
-          roster[playerID].targRay.remove();
+          roster[playerID].targRay?.remove();
         }
       }
     }
@@ -1466,7 +1467,7 @@ function drawAll(owner, camFollows = true) {
 
   push();
   //Mimic p5.play's normal camera functionality
-  translate(width/2, height/2);
+  translate(width / 2, height / 2);
   scale(mimicam.zoom);
   translate(-mimicam.x, -mimicam.y);
   //Draw all sprites with the offset
@@ -1573,6 +1574,51 @@ function debugStats(user) {
   fill(255);
   text("Health: " + user.health, 10, 10);
   text("Value: " + user.value, 10, 20);
+  text("Controller " + player.playerID + ": ", 10, height - 90);
+  text(
+    "   rs " +
+      contros[player.playerID]?.rightStick.x +
+      ", " +
+      contros[player.playerID]?.rightStick.y,
+    10,
+    height - 80
+  );
+  text(
+    "   ls " +
+      contros[player.playerID]?.leftStick.x +
+      ", " +
+      contros[player.playerID]?.leftStick.y,
+    10,
+    height - 70
+  );
+  text("   rt " + contros[player.playerID]?.rt, 10, height - 60);
+  text("   lt " + contros[player.playerID]?.lt, 10, height - 50);
+  text("   lb " + contros[player.playerID]?.lb, 10, height - 40);
+  text("   rb " + contros[player.playerID]?.rb, 10, height - 30);
+  text(
+    "   dpad u:" +
+      contros[player.playerID]?.up +
+      " d:" +
+      contros[player.playerID]?.down +
+      " l:" +
+      contros[player.playerID]?.left +
+      " r:" +
+      contros[player.playerID]?.right,
+    10,
+    height - 20
+  );
+  text(
+    "   buttons a:" +
+      contros[player.playerID]?.a +
+      " b:" +
+      contros[player.playerID]?.b +
+      " x:" +
+      contros[player.playerID]?.x +
+      " y:" +
+      contros[player.playerID]?.y,
+    10,
+    height - 10
+  );
 
   //text("Rotation: " + user.rotation, 10, 40)
 
