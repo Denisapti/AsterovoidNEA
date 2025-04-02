@@ -469,7 +469,7 @@ function unDock(obj1, obj2) {
 
 function boardStation(player, station) {
   player.gameState = "onFoot";
-  player.character = new characters.Sprite(15 * walls.w, -(bufferRadius + 100))
+  player.character = new characters.Sprite(15 * walls.w, -(bufferRadius + 100 + -(walls.h * 25)));
 }
 
 function leaveStation(player) {
@@ -1254,6 +1254,7 @@ function ctrlCharacter(playerID) {
       roster[playerID].character.vel.x = contros[playerID].leftStick.x
     }
   }
+  roster[playerID].character.rotation = 0
 }
 
 function ctrlShip(playerID) {
