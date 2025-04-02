@@ -83,6 +83,13 @@ function setup() {
   players.w = 80;
   players.image = loadImage("ship.png");
 
+  characters = new Group()
+  characters.collider = "d";
+  characters.h = 80;
+  characters.w = 30;
+  characters.image = loadImage("character.png");
+
+
   stationBodies = new interactables.Group();
   stationBodies.collider = "d";
   stationBodies.width = 208;
@@ -258,7 +265,7 @@ function setup() {
       "WWWWWWWWddddddddddWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
     ],
     0,
-    -bufferRadius - 100,
+    -(bufferRadius + 100),
     walls.w,
     walls.h
   );
@@ -462,10 +469,7 @@ function unDock(obj1, obj2) {
 
 function boardStation(player, station) {
   player.gameState = "onFoot";
-  if (station.MapLoaded == false) {
-    //load the station map
-    //loadStationMap()
-  }
+  player.character = new characters.Sprite(15 * walls.w, -(bufferRadius + 100 + -(walls.h * 25)));
 }
 
 function leaveStation(player) {
@@ -1227,7 +1231,7 @@ function ctrlCharacter(playerID) {
   // center camera on (50*20),-(bufferRadius+100+(25*20))
 
   mimicam.x = 50 * walls.w;
-  mimicam.y = -(bufferRadius - 100) + 15 * walls.h; //Don't have this in the bracket
+  mimicam.y = -(bufferRadius + 100) + 15 * walls.h; //Don't have this in the bracket
   mimicam.zoom = 0.6;
   drawAll(null, false);
 
@@ -1243,7 +1247,15 @@ function ctrlCharacter(playerID) {
       console.log("pilot station pressed");
       pilotStation(roster[playerID], roster[playerID].station);
     }
+
+    if (Math.abs(contros[playerID].leftStick.y) > 0.2) {
+      roster[playerID].character.vel.y = contros[playerID].leftStick.y
+    }
+    if (Math.abs(contros[playerID].leftStick.x) > 0.2) {
+      roster[playerID].character.vel.x = contros[playerID].leftStick.x
+    }
   }
+  roster[playerID].character.rotation = 0
 }
 
 function ctrlShip(playerID) {
