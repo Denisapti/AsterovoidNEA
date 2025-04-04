@@ -201,6 +201,7 @@ function setup() {
   Vis = new walls.Group();
   Vis.color = "yellow";
   Vis.tile = "v";
+  Vis.collider = "n"
 
   shop = new Group();
   shop.collider = "s";
@@ -270,18 +271,20 @@ function setup() {
       "WWWWWWWWddddddddddWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
     ],
     0,
-    -(bufferRadius + 100),
+    (bufferRadius + 100),
     walls.w,
     walls.h
   );
 
-  stationBackground = new Sprite((walls.w*50)-10, -(bufferRadius + 100 - (walls.h*25) ) -10, walls.w * 50, walls.h*25);
+  stationBackground = new Sprite((walls.w*50)-10, (bufferRadius + 100 +(walls.h*25) ) -10, walls.w * 50, walls.h*25);
   stationBackground.image = SpaceStationInterior
   stationBackground.scale = 2
   stationBackground.collider = "n";
 
   addStation();
   addPlayerShip(stations[0]);
+
+  boardStation(roster[0], stations[0]);
 
   //setup healthbars to show health (controlled in check health loop) <abandoned>
   // healthBarA = new Sprite();
@@ -334,7 +337,11 @@ function addStation() {
   station.players = [];
   station.stationMap = [];
   station.MapLoaded = false;
-  station.dockedPlayers = [];
+  station.dockedPlayers = 
+  {
+    left: null,
+    right: null
+  }
 
   station.bodyObj.health = 1000;
   station.bodyObj.maxHealth = 1000;
@@ -401,14 +408,14 @@ function addStation() {
   //glue the docking sensors to the station
   new GlueJoint(station.bodyObj, station.leftDockingSensor);
   new GlueJoint(station.bodyObj, station.rightDockingSensor);
-  //makw the docking sensors overlap the station
+  //make the docking sensors overlap the station
   station.bodyObj.overlaps(station.leftDockingSensor);
   station.bodyObj.overlaps(station.rightDockingSensor);
 
   stations.push(station);
 }
 
-function dock(obj1, obj2) {
+function dock(obj1, obj2, sensor) {
   //identify which is the player and which is the station
   if (players.contains(obj1)) {
     let player = obj1;
@@ -422,11 +429,15 @@ function dock(obj1, obj2) {
     //glue the player to the station
     new GlueJoint(player.obj, station.bodyObj);
     //add the player to the station's docked players in slot one, if its full add to slot 2
-    if (station.dockedPlayers[0] == null) {
-      station.dockedPlayers[0] = player;
-    } else {
-      station.dockedPlayers[1] = player;
-    }
+      if (sensor === station.leftDockingSensor) {
+        station.dockedPlayers.left = player;
+      } 
+
+      else if (sensor === station.rightDockingSensor) {
+        station.dockedPlayers.right = player;
+      }
+
+
     player.canDock = false;
     player.isDocked = true;
   }
@@ -434,7 +445,7 @@ function dock(obj1, obj2) {
   //glue the player to the station
   new GlueJoint(player.obj, station.bodyObj);
   //add the player to the station's docked players in slot one, if its full add to slot 2
-  if (station.dockedPlayers[0] == null) {
+  if (station.dockedPlayers.right == null) {
     station.dockedPlayers[0] = player;
   } else {
     station.dockedPlayers[1] = player;
@@ -463,10 +474,10 @@ function unDock(obj1, obj2) {
     }
   }
   //remove the player from the station's docked players
-  if (station.dockedPlayers[0] == player) {
-    station.dockedPlayers[0] = null;
-  } else {
-    station.dockedPlayers[1] = null;
+  if (station.dockedPlayers.left == player) {
+    station.dockedPlayers.left = null;
+  } else if (station.dockedPlayers.right == player) {
+    station.dockedPlayers.right = null;
   }
 
   //five second delay before the player can dock again
@@ -479,7 +490,7 @@ function unDock(obj1, obj2) {
 
 function boardStation(player, station) {
   player.gameState = "onFoot";
-  player.character = new characters.Sprite(15 * walls.w, -(bufferRadius + 100 + -(walls.h * 25)));
+  player.character = new characters.Sprite(15 * walls.w, (bufferRadius + 100 + (walls.h * 25)));
 }
 
 function leaveStation(player) {
@@ -500,8 +511,8 @@ function addPlayerShip(station) {
     obj: null,
   };
   player.obj = new players.Sprite();
-  player.obj.x = width / 4;
-  player.obj.y = height / 4;
+  player.obj.x = station.x;
+  player.obj.y = station.y;
   player.obj.offset.x = 15;
   player.obj.health = 100;
   player.obj.maxHealth = 100;
@@ -1240,7 +1251,7 @@ function ctrlCharacter(playerID) {
   // center camera on (50*20),-(bufferRadius+100+(25*20))
 
   mimicam.x = 50 * walls.w;
-  mimicam.y = -(bufferRadius + 100) + 15 * walls.h; //Don't have this in the bracket
+  mimicam.y = (bufferRadius + 100) + 15 * walls.h; //Don't have this in the bracket
   mimicam.zoom = 0.6;
   drawAll(null, false);
 
@@ -1265,6 +1276,16 @@ function ctrlCharacter(playerID) {
     }
   }
   roster[playerID].character.rotation = 0
+
+
+    if (roster[playerID].character.collides(doors))
+    {
+      
+      leaveStation(roster[playerID]);
+    }
+  
+
+
 }
 
 function ctrlShip(playerID) {
