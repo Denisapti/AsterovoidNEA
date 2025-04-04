@@ -33,6 +33,11 @@ var stationBodies,
   stationMap;
 var asteroidNodes, asteroidValNodes, drills;
 
+function preload()
+{
+  SpaceStationInterior = loadImage("Space station interior.bmp")
+}
+
 function setup() {
   createCanvas(windowWidth, windowHeight);
 
@@ -270,6 +275,11 @@ function setup() {
     walls.h
   );
 
+  stationBackground = new Sprite((walls.w*50)-10, -(bufferRadius + 100 - (walls.h*25) ) -10, walls.w * 50, walls.h*25);
+  stationBackground.image = SpaceStationInterior
+  stationBackground.scale = 20
+  stationBackground.collider = "n";
+
   addStation();
   addPlayerShip(stations[0]);
 
@@ -501,7 +511,7 @@ function addPlayerShip(station) {
   player.abilityState = 0;
   player.isDocked = false;
   player.canDock = true;
-  player.gameState = "ship"; // 4 options, ship, station, dead, onFoot
+  player.gameState = "onFoot"; // 4 options, ship, station, dead, onFoot
 
   //create and attach a drill to the player
   drill = new drills.Sprite(
