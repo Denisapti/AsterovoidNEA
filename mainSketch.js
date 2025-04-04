@@ -277,7 +277,7 @@ function setup() {
 
   stationBackground = new Sprite((walls.w*50)-10, -(bufferRadius + 100 - (walls.h*25) ) -10, walls.w * 50, walls.h*25);
   stationBackground.image = SpaceStationInterior
-  stationBackground.scale = 20
+  stationBackground.scale = 2
   stationBackground.collider = "n";
 
   addStation();
