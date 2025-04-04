@@ -495,6 +495,7 @@ function boardStation(player, station) {
 
 function leaveStation(player) {
   player.gameState = "ship";
+  player.character.remove();
 }
 
 function pilotStation(player) {
@@ -511,8 +512,8 @@ function addPlayerShip(station) {
     obj: null,
   };
   player.obj = new players.Sprite();
-  player.obj.x = station.x;
-  player.obj.y = station.y;
+  player.obj.x = station.bodyObj.x-60;
+  player.obj.y = station.bodyObj.y+10;
   player.obj.offset.x = 15;
   player.obj.health = 100;
   player.obj.maxHealth = 100;
