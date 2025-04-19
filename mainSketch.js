@@ -217,21 +217,35 @@ function setup() {
   helm.height = 20;
   helm.tile = "h";
 
+  info = new Group();
+  info.collider = "s";
+  info.color = "purple";
+  info.width = 20;
+  info.height = 20;
+  info.tile = "i";
+
+  escapePod = new Group();
+  escapePod.collider = "s";
+  escapePod.color = "red";
+  escapePod.width = 20;
+  escapePod.height = 20;
+  escapePod.tile = "e";
+
   stationTiles = new Tiles(
     [
       "WWWWWWWWddddddddddWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
       "W.......vddddddddv........................WWWWWWWWW................................................g",
       "W........vvddddvv.........................WWWWWWWWW................................................g",
       "W..........vvvv...........................WWWWWWWWW................................................g",
-      "W.........................................WWWWWWWWW................................................g",
-      "W...............................ssss......WWWWWWWWW................................................g",
-      "W.............................ssssssss....WWWWWWWWW................................................g",
-      "W.............................ssssssss....WWWWWWWWW................................................g",
-      "W............................ssssssssss...WWWWWWWWW................................................g",
-      "W............................ssssssssss...WWWWWWWWW................................................g",
-      "W............................ssssssssss...WWWWWWWWW................................................g",
-      "W............................ssssssssss...WWWWWWWWW................................................g",
-      "W.............................ssssssss....WWWWWWWWW................................................g",
+      "W.........................................WWWWWWWWW....ii......................ii..................g",
+      "W...............................ssss......WWWWWWWWW....ii......................ii..................g",
+      "W.............................ssssssss....WWWWWWWWW....ii......................ii..................g",
+      "W.............................ssssssss....WWWWWWWWW....ii......................ii..................g",
+      "W............................ssssssssss...WWWWWWWWW....ii......................ii..................g",
+      "W............................ssssssssss...WWWWWWWWW....ii.ii.ii.ii.ii.ii.ii.ii.ii..................g",
+      "W............................ssssssssss...WWWWWWWWW....ii......................ii..................g",
+      "W............................ssssssssss...WWWWWWWWW....iiiiiiiiiiiiiiiiiiiiiiiiii..................g",
+      "W.............................ssssssss....WWWWWWWWW....iiiiiiiiiiiiiiiiiiiiiiiiii..................g",
       "W.............................ssssssss....WWWWWWWWW................................................g",
       "W...............................ssss......WWWWWWWWW..................................wwwwwww.......g",
       "W.........................................WWWWWWWWW..................................wwwwwww.......g",
@@ -263,12 +277,12 @@ function setup() {
       "W............................ssssssssss...WWWWWWWWW................................................g",
       "W.............................ssssssss....WWWWWWWWW................................................g",
       "W.............................ssssssss....WWWWWWWWW................................................g",
-      "W...............................ssss......WWWWWWWWW................................................g",
-      "W.........................................WWWWWWWWW................................................g",
-      "W..........vvvv...........................WWWWWWWWW................................................g",
-      "W........vvddddvv.........................WWWWWWWWW................................................g",
+      "W...............................ssss......WWWWWWWWW...eeee....eeee....eeee....eeee.................g",
+      "W.........................................WWWWWWWWW...eeee....eeee....eeee....eeee.................g",
+      "W..........vvvv...........................WWWWWWWWW...eeee....eeee....eeee....eeee.................g",
+      "W........vvddddvv.........................WWWWWWWWW...eeee....eeee....eeee....eeee.................g",
       "W.......vddddddddv........................WWWWWWWWW................................................g",
-      "WWWWWWWWddddddddddWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+      "WWWWWWWWddddddddddWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW"
     ],
     0,
     (bufferRadius + 100),
@@ -1177,10 +1191,13 @@ function getRandomNumber(min, max) {
 function ctrl(playerID) {
   if (roster[playerID].gameState == "ship") {
     ctrlShip(playerID);
-  } else if (roster[playerID].gameState == "station") {
-    ctrlStation(playerID, roster[playerID].station);
-  } else if (roster[playerID].gameState == "dead") {
-  } else if (roster[playerID].gameState == "onFoot") { //Missed an `if`
+  }
+   else if (roster[playerID].gameState == "station") {
+  ctrlStation(playerID, roster[playerID].station);
+  } 
+  else if (roster[playerID].gameState == "dead") {
+  } 
+  else if (roster[playerID].gameState == "onFoot") { //Missed an `if`
     ctrlCharacter(playerID);
   }
 }
@@ -1202,8 +1219,7 @@ function ctrlStation(playerID) {
     if (contros[playerID].pressed("b")) {
       console.log("undock pressed");
       pilotStationEnd(
-        roster[playerID].station.bodyObj,
-        roster[playerID].station.bodyObj.bodyObj
+        roster[playerID]
       );
     }
 
@@ -1270,20 +1286,26 @@ function ctrlCharacter(playerID) {
     }
 
     if (Math.abs(contros[playerID].leftStick.y) > 0.2) {
-      roster[playerID].character.vel.y = contros[playerID].leftStick.y
+      roster[playerID].character.vel.y = contros[playerID].leftStick.y*3
     }
     if (Math.abs(contros[playerID].leftStick.x) > 0.2) {
-      roster[playerID].character.vel.x = contros[playerID].leftStick.x
+      roster[playerID].character.vel.x = contros[playerID].leftStick.x*3
     }
   }
   roster[playerID].character.rotation = 0
 
+  //  player interaction triggers
 
     if (roster[playerID].character.collides(doors))
     {
       
       leaveStation(roster[playerID]);
     }
+    else if (roster[playerID].character.collides(helm))
+      {
+        pilotStation(roster[playerID]);
+      }
+    // continue here  ---------->
   
 
 
