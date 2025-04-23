@@ -1,4 +1,6 @@
 // initialising variables
+
+
 let stations = [],
   roster = [],
   torpedos = [],
@@ -161,6 +163,8 @@ function setup() {
   drills.value = 20;
   drills.durability = 150;
   drills.mass = 1;
+
+
 
   //set up tiles
   walls = new Group();
@@ -1266,6 +1270,7 @@ function ctrlStation(playerID) {
 
 function ctrlCharacter(playerID) {
   // center camera on (50*20),-(bufferRadius+100+(25*20))
+  
 
   mimicam.x = 50 * walls.w;
   mimicam.y = (bufferRadius + 100) + 15 * walls.h; //Don't have this in the bracket
@@ -1305,10 +1310,21 @@ function ctrlCharacter(playerID) {
       {
         pilotStation(roster[playerID]);
       }
-    // continue here  ---------->
+    else if (roster[playerID].character.collides(escapePod))
+      {
+        window.location.href = "Exit.html";
+      }
+    else if (roster[playerID].character.collides(info))
+      {
+        //info popup
+        infoUiPopup()
+      }
+    else if (roster[playerID].character.collides(shop))
+    {
+        //shop popup
+        shopUiPopup()
+    }
   
-
-
 }
 
 function ctrlShip(playerID) {
@@ -1670,7 +1686,7 @@ function healthIndicator(user) {
   if (endAngle > 360) {
     endAngle -= 360;
   }
-
+  
   //draw arc
   stroke(255, 0, 0);
   noFill();
@@ -1684,6 +1700,34 @@ function healthIndicator(user) {
   );
   //text("Arc: " + [(width/2)-(location.x), (height/2)-(location.y), 100, 100, startAngle, endAngle], 10, 260)
   pop();
+}
+
+function infoUiPopup()
+{
+  push()
+
+  fill ("#10101099")
+  rect(0, 0, width, height)
+  textSize(50)
+  textAlign(CENTER, CENTER)
+  fill("white")
+  text("This is the Info Booth. here you can learn all you need to know about how to play. To pilot the space station, approach the helm, if you wish to return to your ship, aproach the doors at the back of the station, if you need to buy upgrades, visit the shops in the cargobay, if you wish to leave the game, approach the escape pods opposite the info booth. So get out there, Mine, Explore, Survive and Experiment! ",10,(height/2), width-40)
+
+  pop()
+}
+
+function shopUiPopup()
+{
+  push()
+  fill ("#10101099")
+  rect(0, 0, width, height)
+  textSize(50)
+  textAlign(CENTER, CENTER)
+  fill("white")
+  text("This is the shop. here you can buy upgrades for your ship.",10,50, width-40)
+  text("currently you have " + player.obj.value + " credits",10,140, width-40)
+
+  pop()
 }
 
 function miniMap(user) {
