@@ -1,4 +1,6 @@
 // initialising variables
+
+
 let stations = [],
   roster = [],
   torpedos = [],
@@ -32,6 +34,11 @@ var stationBodies,
   stationBridge,
   stationMap;
 var asteroidNodes, asteroidValNodes, drills;
+
+function preload()
+{
+  SpaceStationInterior = loadImage("Space station interior.bmp")
+}
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -157,6 +164,8 @@ function setup() {
   drills.durability = 150;
   drills.mass = 1;
 
+
+
   //set up tiles
   walls = new Group();
   walls.collider = "s";
@@ -196,6 +205,7 @@ function setup() {
   Vis = new walls.Group();
   Vis.color = "yellow";
   Vis.tile = "v";
+  Vis.collider = "n"
 
   shop = new Group();
   shop.collider = "s";
@@ -211,21 +221,35 @@ function setup() {
   helm.height = 20;
   helm.tile = "h";
 
+  info = new Group();
+  info.collider = "s";
+  info.color = "purple";
+  info.width = 20;
+  info.height = 20;
+  info.tile = "i";
+
+  escapePod = new Group();
+  escapePod.collider = "s";
+  escapePod.color = "red";
+  escapePod.width = 20;
+  escapePod.height = 20;
+  escapePod.tile = "e";
+
   stationTiles = new Tiles(
     [
       "WWWWWWWWddddddddddWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
       "W.......vddddddddv........................WWWWWWWWW................................................g",
       "W........vvddddvv.........................WWWWWWWWW................................................g",
       "W..........vvvv...........................WWWWWWWWW................................................g",
-      "W.........................................WWWWWWWWW................................................g",
-      "W...............................ssss......WWWWWWWWW................................................g",
-      "W.............................ssssssss....WWWWWWWWW................................................g",
-      "W.............................ssssssss....WWWWWWWWW................................................g",
-      "W............................ssssssssss...WWWWWWWWW................................................g",
-      "W............................ssssssssss...WWWWWWWWW................................................g",
-      "W............................ssssssssss...WWWWWWWWW................................................g",
-      "W............................ssssssssss...WWWWWWWWW................................................g",
-      "W.............................ssssssss....WWWWWWWWW................................................g",
+      "W.........................................WWWWWWWWW....ii......................ii..................g",
+      "W...............................ssss......WWWWWWWWW....ii......................ii..................g",
+      "W.............................ssssssss....WWWWWWWWW....ii......................ii..................g",
+      "W.............................ssssssss....WWWWWWWWW....ii......................ii..................g",
+      "W............................ssssssssss...WWWWWWWWW....ii......................ii..................g",
+      "W............................ssssssssss...WWWWWWWWW....ii.ii.ii.ii.ii.ii.ii.ii.ii..................g",
+      "W............................ssssssssss...WWWWWWWWW....ii......................ii..................g",
+      "W............................ssssssssss...WWWWWWWWW....iiiiiiiiiiiiiiiiiiiiiiiiii..................g",
+      "W.............................ssssssss....WWWWWWWWW....iiiiiiiiiiiiiiiiiiiiiiiiii..................g",
       "W.............................ssssssss....WWWWWWWWW................................................g",
       "W...............................ssss......WWWWWWWWW..................................wwwwwww.......g",
       "W.........................................WWWWWWWWW..................................wwwwwww.......g",
@@ -257,21 +281,28 @@ function setup() {
       "W............................ssssssssss...WWWWWWWWW................................................g",
       "W.............................ssssssss....WWWWWWWWW................................................g",
       "W.............................ssssssss....WWWWWWWWW................................................g",
-      "W...............................ssss......WWWWWWWWW................................................g",
-      "W.........................................WWWWWWWWW................................................g",
-      "W..........vvvv...........................WWWWWWWWW................................................g",
-      "W........vvddddvv.........................WWWWWWWWW................................................g",
+      "W...............................ssss......WWWWWWWWW...eeee....eeee....eeee....eeee.................g",
+      "W.........................................WWWWWWWWW...eeee....eeee....eeee....eeee.................g",
+      "W..........vvvv...........................WWWWWWWWW...eeee....eeee....eeee....eeee.................g",
+      "W........vvddddvv.........................WWWWWWWWW...eeee....eeee....eeee....eeee.................g",
       "W.......vddddddddv........................WWWWWWWWW................................................g",
-      "WWWWWWWWddddddddddWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+      "WWWWWWWWddddddddddWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW"
     ],
     0,
-    -(bufferRadius + 100),
+    (bufferRadius + 100),
     walls.w,
     walls.h
   );
 
+  stationBackground = new Sprite((walls.w*50)-10, (bufferRadius + 100 +(walls.h*25) ) -10, walls.w * 50, walls.h*25);
+  stationBackground.image = SpaceStationInterior
+  stationBackground.scale = 2
+  stationBackground.collider = "n";
+
   addStation();
   addPlayerShip(stations[0]);
+
+  boardStation(roster[0], stations[0]);
 
   //setup healthbars to show health (controlled in check health loop) <abandoned>
   // healthBarA = new Sprite();
@@ -324,7 +355,11 @@ function addStation() {
   station.players = [];
   station.stationMap = [];
   station.MapLoaded = false;
-  station.dockedPlayers = [];
+  station.dockedPlayers = 
+  {
+    left: null,
+    right: null
+  }
 
   station.bodyObj.health = 1000;
   station.bodyObj.maxHealth = 1000;
@@ -391,14 +426,14 @@ function addStation() {
   //glue the docking sensors to the station
   new GlueJoint(station.bodyObj, station.leftDockingSensor);
   new GlueJoint(station.bodyObj, station.rightDockingSensor);
-  //makw the docking sensors overlap the station
+  //make the docking sensors overlap the station
   station.bodyObj.overlaps(station.leftDockingSensor);
   station.bodyObj.overlaps(station.rightDockingSensor);
 
   stations.push(station);
 }
 
-function dock(obj1, obj2) {
+function dock(obj1, obj2, sensor) {
   //identify which is the player and which is the station
   if (players.contains(obj1)) {
     let player = obj1;
@@ -412,11 +447,15 @@ function dock(obj1, obj2) {
     //glue the player to the station
     new GlueJoint(player.obj, station.bodyObj);
     //add the player to the station's docked players in slot one, if its full add to slot 2
-    if (station.dockedPlayers[0] == null) {
-      station.dockedPlayers[0] = player;
-    } else {
-      station.dockedPlayers[1] = player;
-    }
+      if (sensor === station.leftDockingSensor) {
+        station.dockedPlayers.left = player;
+      } 
+
+      else if (sensor === station.rightDockingSensor) {
+        station.dockedPlayers.right = player;
+      }
+
+
     player.canDock = false;
     player.isDocked = true;
   }
@@ -424,7 +463,7 @@ function dock(obj1, obj2) {
   //glue the player to the station
   new GlueJoint(player.obj, station.bodyObj);
   //add the player to the station's docked players in slot one, if its full add to slot 2
-  if (station.dockedPlayers[0] == null) {
+  if (station.dockedPlayers.right == null) {
     station.dockedPlayers[0] = player;
   } else {
     station.dockedPlayers[1] = player;
@@ -453,10 +492,10 @@ function unDock(obj1, obj2) {
     }
   }
   //remove the player from the station's docked players
-  if (station.dockedPlayers[0] == player) {
-    station.dockedPlayers[0] = null;
-  } else {
-    station.dockedPlayers[1] = null;
+  if (station.dockedPlayers.left == player) {
+    station.dockedPlayers.left = null;
+  } else if (station.dockedPlayers.right == player) {
+    station.dockedPlayers.right = null;
   }
 
   //five second delay before the player can dock again
@@ -469,11 +508,12 @@ function unDock(obj1, obj2) {
 
 function boardStation(player, station) {
   player.gameState = "onFoot";
-  player.character = new characters.Sprite(15 * walls.w, -(bufferRadius + 100 + -(walls.h * 25)));
+  player.character = new characters.Sprite(15 * walls.w, (bufferRadius + 100 + (walls.h * 25)));
 }
 
 function leaveStation(player) {
   player.gameState = "ship";
+  player.character.remove();
 }
 
 function pilotStation(player) {
@@ -490,8 +530,8 @@ function addPlayerShip(station) {
     obj: null,
   };
   player.obj = new players.Sprite();
-  player.obj.x = width / 4;
-  player.obj.y = height / 4;
+  player.obj.x = station.bodyObj.x-60;
+  player.obj.y = station.bodyObj.y+10;
   player.obj.offset.x = 15;
   player.obj.health = 100;
   player.obj.maxHealth = 100;
@@ -501,7 +541,7 @@ function addPlayerShip(station) {
   player.abilityState = 0;
   player.isDocked = false;
   player.canDock = true;
-  player.gameState = "ship"; // 4 options, ship, station, dead, onFoot
+  player.gameState = "onFoot"; // 4 options, ship, station, dead, onFoot
 
   //create and attach a drill to the player
   drill = new drills.Sprite(
@@ -1028,7 +1068,7 @@ function launchTorp(playerID, target) {
         [0, -6],
       ]
     );
-
+    torp.obj.color = "blue"
     torp.target = target;
     torp.status = false;
     torp.obj.health = 2;
@@ -1078,7 +1118,7 @@ function fireGun(playerID, bearing, power) {
   bullet.health = 10;
   bullet.obj.applyForce(0.5 * power);
   bullet.obj.durability = 50;
-
+  bullet.obj.color = "grey"
   bullet.status = false;
   bullet.lifespan = setTimeout(function () {
     bullet.obj.remove();
@@ -1155,10 +1195,13 @@ function getRandomNumber(min, max) {
 function ctrl(playerID) {
   if (roster[playerID].gameState == "ship") {
     ctrlShip(playerID);
-  } else if (roster[playerID].gameState == "station") {
-    ctrlStation(playerID, roster[playerID].station);
-  } else if (roster[playerID].gameState == "dead") {
-  } else if (roster[playerID].gameState == "onFoot") { //Missed an `if`
+  }
+   else if (roster[playerID].gameState == "station") {
+  ctrlStation(playerID, roster[playerID].station);
+  } 
+  else if (roster[playerID].gameState == "dead") {
+  } 
+  else if (roster[playerID].gameState == "onFoot") { //Missed an `if`
     ctrlCharacter(playerID);
   }
 }
@@ -1180,8 +1223,7 @@ function ctrlStation(playerID) {
     if (contros[playerID].pressed("b")) {
       console.log("undock pressed");
       pilotStationEnd(
-        roster[playerID].station.bodyObj,
-        roster[playerID].station.bodyObj.bodyObj
+        roster[playerID]
       );
     }
 
@@ -1228,9 +1270,10 @@ function ctrlStation(playerID) {
 
 function ctrlCharacter(playerID) {
   // center camera on (50*20),-(bufferRadius+100+(25*20))
+  
 
   mimicam.x = 50 * walls.w;
-  mimicam.y = -(bufferRadius + 100) + 15 * walls.h; //Don't have this in the bracket
+  mimicam.y = (bufferRadius + 100) + 15 * walls.h; //Don't have this in the bracket
   mimicam.zoom = 0.6;
   drawAll(null, false);
 
@@ -1248,13 +1291,40 @@ function ctrlCharacter(playerID) {
     }
 
     if (Math.abs(contros[playerID].leftStick.y) > 0.2) {
-      roster[playerID].character.vel.y = contros[playerID].leftStick.y
+      roster[playerID].character.vel.y = contros[playerID].leftStick.y*3
     }
     if (Math.abs(contros[playerID].leftStick.x) > 0.2) {
-      roster[playerID].character.vel.x = contros[playerID].leftStick.x
+      roster[playerID].character.vel.x = contros[playerID].leftStick.x*3
     }
   }
   roster[playerID].character.rotation = 0
+
+  //  player interaction triggers
+
+    if (roster[playerID].character.collides(doors))
+    {
+      
+      leaveStation(roster[playerID]);
+    }
+    else if (roster[playerID].character.collides(helm))
+      {
+        pilotStation(roster[playerID]);
+      }
+    else if (roster[playerID].character.collides(escapePod))
+      {
+        window.location.href = "Exit.html";
+      }
+    else if (roster[playerID].character.collides(info))
+      {
+        //info popup
+        infoUiPopup()
+      }
+    else if (roster[playerID].character.collides(shop))
+    {
+        //shop popup
+        shopUiPopup()
+    }
+  
 }
 
 function ctrlShip(playerID) {
@@ -1616,7 +1686,7 @@ function healthIndicator(user) {
   if (endAngle > 360) {
     endAngle -= 360;
   }
-
+  
   //draw arc
   stroke(255, 0, 0);
   noFill();
@@ -1630,6 +1700,34 @@ function healthIndicator(user) {
   );
   //text("Arc: " + [(width/2)-(location.x), (height/2)-(location.y), 100, 100, startAngle, endAngle], 10, 260)
   pop();
+}
+
+function infoUiPopup()
+{
+  push()
+
+  fill ("#10101099")
+  rect(0, 0, width, height)
+  textSize(50)
+  textAlign(CENTER, CENTER)
+  fill("white")
+  text("This is the Info Booth. here you can learn all you need to know about how to play. To pilot the space station, approach the helm, if you wish to return to your ship, aproach the doors at the back of the station, if you need to buy upgrades, visit the shops in the cargobay, if you wish to leave the game, approach the escape pods opposite the info booth. So get out there, Mine, Explore, Survive and Experiment! ",10,(height/2), width-40)
+
+  pop()
+}
+
+function shopUiPopup()
+{
+  push()
+  fill ("#10101099")
+  rect(0, 0, width, height)
+  textSize(50)
+  textAlign(CENTER, CENTER)
+  fill("white")
+  text("This is the shop. here you can buy upgrades for your ship.",10,50, width-40)
+  text("currently you have " + player.obj.value + " credits",10,140, width-40)
+
+  pop()
 }
 
 function miniMap(user) {
@@ -1696,6 +1794,36 @@ function miniMap(user) {
       let pointerStart = calculateBearingLineEnd(angle, 75);
       fill("white");
       stroke("white");
+      circle(mini.x + pointerStart.x, mini.y + pointerStart.y, 1);
+    }
+  }
+
+  for (i of stationBodies) {
+    // MAPS STATIONS
+    noFill();
+    stroke("yellow");
+    vectorTo.x = i.x - user.x; //finds xy vector to the object from the user
+    vectorTo.y = i.y - user.y;
+    if (findRadius(vectorTo.x, vectorTo.y) < playerHorizon) {
+        push();
+        translate(mini.x + (vectorTo.x / playerHorizon) * 75, mini.y + (vectorTo.y / playerHorizon) * 75);
+        rotate(i.rotation - 90);
+        noFill();
+        stroke("yellow");
+        triangle(0, 4, 2, -4, -2, -4);   
+        pop();     
+      ellipse(
+        mini.x + ((vectorTo.x / playerHorizon) * 75),
+        mini.y + ((vectorTo.y / playerHorizon) * 75),
+        10,
+        10
+      );
+      
+    } else {
+      let angle = findBearing(vectorTo.x, vectorTo.y);
+      let pointerStart = calculateBearingLineEnd(angle, 75);
+      fill("yellow");
+      stroke("yellow");
       circle(mini.x + pointerStart.x, mini.y + pointerStart.y, 1);
     }
   }
