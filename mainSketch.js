@@ -1068,7 +1068,7 @@ function launchTorp(playerID, target) {
         [0, -6],
       ]
     );
-
+    torp.obj.color = "blue"
     torp.target = target;
     torp.status = false;
     torp.obj.health = 2;
@@ -1118,7 +1118,7 @@ function fireGun(playerID, bearing, power) {
   bullet.health = 10;
   bullet.obj.applyForce(0.5 * power);
   bullet.obj.durability = 50;
-
+  bullet.obj.color = "grey"
   bullet.status = false;
   bullet.lifespan = setTimeout(function () {
     bullet.obj.remove();
@@ -1794,6 +1794,36 @@ function miniMap(user) {
       let pointerStart = calculateBearingLineEnd(angle, 75);
       fill("white");
       stroke("white");
+      circle(mini.x + pointerStart.x, mini.y + pointerStart.y, 1);
+    }
+  }
+
+  for (i of stationBodies) {
+    // MAPS STATIONS
+    noFill();
+    stroke("yellow");
+    vectorTo.x = i.x - user.x; //finds xy vector to the object from the user
+    vectorTo.y = i.y - user.y;
+    if (findRadius(vectorTo.x, vectorTo.y) < playerHorizon) {
+        push();
+        translate(mini.x + (vectorTo.x / playerHorizon) * 75, mini.y + (vectorTo.y / playerHorizon) * 75);
+        rotate(i.rotation - 90);
+        noFill();
+        stroke("yellow");
+        triangle(0, 4, 2, -4, -2, -4);   
+        pop();     
+      ellipse(
+        mini.x + ((vectorTo.x / playerHorizon) * 75),
+        mini.y + ((vectorTo.y / playerHorizon) * 75),
+        10,
+        10
+      );
+      
+    } else {
+      let angle = findBearing(vectorTo.x, vectorTo.y);
+      let pointerStart = calculateBearingLineEnd(angle, 75);
+      fill("yellow");
+      stroke("yellow");
       circle(mini.x + pointerStart.x, mini.y + pointerStart.y, 1);
     }
   }
